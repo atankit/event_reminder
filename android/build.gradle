@@ -1,0 +1,58 @@
+//
+//allprojects {
+//    repositories {
+//        google()
+//        mavenCentral()
+//    }
+//}
+//
+//rootProject.buildDir = "../build"
+//subprojects {
+//    project.buildDir = "${rootProject.buildDir}/${project.name}"
+//}
+//subprojects {
+//    project.evaluationDependsOn(":app")
+//}
+//
+//tasks.register("clean", Delete) {
+//    delete rootProject.buildDir
+//}
+
+
+// Root-level build.gradle (usually located in the root of your project)
+
+buildscript {
+    repositories {
+        google()      // Ensure Google repository is available
+        mavenCentral() // Add Maven Central repository if needed
+    }
+
+    dependencies {
+        // The classpath for the Android Gradle plugin
+        classpath 'com.android.tools.build:gradle:7.3.1'
+    }
+}
+
+allprojects {
+    repositories {
+        google()      // Ensure Google repository is available for all projects
+        mavenCentral() // Add Maven Central repository for all projects
+    }
+}
+
+rootProject.buildDir = "../build"  // Set the root build directory
+
+subprojects {
+    // Customize build directory for each subproject
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+
+subprojects {
+    // Ensure subprojects depend on the app project
+    project.evaluationDependsOn(":app")
+}
+
+// Clean task definition
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir // Clean the root project build directory
+}
