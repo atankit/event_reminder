@@ -92,7 +92,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Text("Add Task", style: headingStyle),
+              // Text("Add Task", style: headingStyle),
+              Text(widget.task == null ? "Add Task" : "Update Task", style: headingStyle),
               MyInputField(
                 title: "Title",
                 hint: "Enter your title",
@@ -227,7 +228,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _colorPalette(),
-                  MyButton(label: "Create Task", onTap: _validateData),
+                  MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
                 ],
               ),
               const SizedBox(height: 20),

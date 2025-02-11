@@ -43,6 +43,20 @@ class AuthService {
     }
   }
 
+  // **Register with Email**
+  static Future<User?> registerWithEmail(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+      return userCredential.user;
+    } catch (e) {
+      print("Error during registration: $e");
+      return null;
+    }
+  }
+
   // Sign out
   static Future<void> signOut() async {
     try {

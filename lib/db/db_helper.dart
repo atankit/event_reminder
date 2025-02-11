@@ -12,10 +12,14 @@ class DBHelper{
       return;
     }
     try{
+      //join using your laptop
       String _path = await getDatabasesPath() + 'tasks.db';
       _db = await openDatabase(
           _path,
         version: _version,
+        onUpgrade: (db,version,newVersion){
+            //write upgrade query here
+        },
         onCreate: (db, version){
             print('Creating a new one');
             return db.execute(
