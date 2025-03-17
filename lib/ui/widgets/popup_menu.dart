@@ -1,4 +1,5 @@
 import 'package:event_manager/SignIn/auth_service.dart';
+import 'package:event_manager/SignIn/login_screen.dart';
 import 'package:event_manager/pin/reset_pin_screen.dart';
 import 'package:event_manager/pin/set_pin_screen.dart';
 import 'package:event_manager/pin/app_lock_service.dart';
@@ -7,7 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:event_manager/cloud%20backup/backup_restore.dart';
 import 'package:get/get.dart';
 
+final AuthService _authService = AuthService();
+
 extension PopupMenuAvatar on Widget {
+
   Widget popupMenu(
       {required BuildContext context, DateTime? startDate, DateTime? endDate}) {
     return PopupMenuButton<String>(
@@ -55,8 +59,8 @@ extension PopupMenuAvatar on Widget {
             }
           });
         } else if (value == 'logout') {
-          // AuthService.signOut()
           _showLogoutConfirmation();
+          _authService.logout();
         }
       },
       itemBuilder: (context) => [
@@ -102,7 +106,7 @@ extension PopupMenuAvatar on Widget {
       textCancel: "No",
       confirmTextColor: Colors.white,
       onConfirm: () {
-        AuthService.signOut();
+        Get.off(() => LoginScreen());
       },
     );
   }

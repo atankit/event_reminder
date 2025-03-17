@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _isSearchVisible = false;
 
   @override
   void initState() {
@@ -45,42 +46,176 @@ class _HomePageState extends State<HomePage> {
           children: [
 
             _addTaskBar(),
+
             _addDateBar(),
-            const SizedBox(
-              height: 10,
-            ),
-            _searchBar(),
+
+            const SizedBox( height: 10, ),
+
+            // _isSearchVisible ? _searchBar() : Container(),
+
             _showTasks(),
           ],
         ));
+
   }
 
 
 
   // Customized appbar
+  // _appBar() {
+  //   return AppBar(
+  //     automaticallyImplyLeading: false,
+  //     elevation: 0,
+  //     backgroundColor: context.theme.primaryColor,
+  //     leading: GestureDetector(
+  //       onTap: () {
+  //         ThemeService().switchTheme();
+  //       },
+  //       child: Icon(
+  //           Get.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+  //           size: 20,
+  //           color: Get.isDarkMode ? Colors.white : Colors.black),
+  //     ),
+  //     actions: [
+  //       CircleAvatar(
+  //         backgroundImage: AssetImage("images/profile_img.jpg"),
+  //         radius: 20,
+  //       ).popupMenu(context: context),
+  //       const SizedBox(width: 20),
+  //     ],
+  //   );
+  //
+  // }
+
+  // _appBar() {
+  //   return AppBar(
+  //     automaticallyImplyLeading: false,
+  //     elevation: 0,
+  //     backgroundColor: context.theme.primaryColor,
+  //     leading: Padding(
+  //       padding: const EdgeInsets.only(left: 16),
+  //   child: CircleAvatar(
+  //       radius: 20,
+  //       backgroundColor: Colors.transparent,
+  //       child: ClipOval(
+  //         child: Image.asset(
+  //           "images/profile_img.jpg",
+  //           width: 36,
+  //           height: 36,
+  //           fit: BoxFit.cover,
+  //         ),
+  //       ),
+  //     )
+  //
+  //   )
+  //
+  //       .popupMenu(context: context),
+  //     actions: [
+  //       GestureDetector(
+  //         onTap: () {
+  //           setState(() {
+  //             _isSearchVisible = !_isSearchVisible; // Toggle search bar
+  //           });
+  //         },
+  //         child: const Icon(Icons.search, size: 24, color: Colors.white),
+  //       ),
+  //       const SizedBox(width: 20),
+  //       GestureDetector(
+  //         onTap: () {
+  //           ThemeService().switchTheme();
+  //         },
+  //         child: Icon(
+  //           Get.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+  //           size: 20,
+  //           color: Get.isDarkMode ? Colors.white : Colors.black,
+  //         ),
+  //       ),
+  //       const SizedBox(width: 20),
+  //     ],
+  //   );
+  // }
+
   _appBar() {
     return AppBar(
       automaticallyImplyLeading: false,
       elevation: 0,
       backgroundColor: context.theme.primaryColor,
-      leading: GestureDetector(
-        onTap: () {
-          ThemeService().switchTheme();
-        },
-        child: Icon(
+      title: _isSearchVisible
+          ? Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2), // Slight transparency
+          borderRadius: BorderRadius.circular(12), // Rounded corners
+          border: Border.all(color: Colors.white, width: 1.5), // White border
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+          decoration: InputDecoration(
+            hintText: "Search events...",
+            hintStyle: subTitleStyle.copyWith(color: Colors.white70),
+            border: InputBorder.none,
+            prefixIcon: const Icon(Icons.search, color: Colors.white),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          ),
+          style: const TextStyle(color: Colors.white),
+          autofocus: true,
+        ),
+      )
+          : null, // Removed title text
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: CircleAvatar(
+          radius: 20,
+          backgroundColor: Colors.transparent,
+          child: ClipOval(
+            child: Image.asset(
+              "images/profile_img.jpg",
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      ).popupMenu(context: context),
+      actions: [
+        if (!_isSearchVisible)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isSearchVisible = true;
+              });
+            },
+            child: const Icon(Icons.search, size: 24, color: Colors.white),
+          ),
+        if (_isSearchVisible)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _searchController.clear();
+                _searchQuery = '';
+                _isSearchVisible = false;
+              });
+            },
+            child: const Icon(Icons.close, size: 24, color: Colors.white),
+          ),
+        const SizedBox(width: 20),
+        GestureDetector(
+          onTap: () {
+            ThemeService().switchTheme();
+          },
+          child: Icon(
             Get.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
             size: 20,
-            color: Get.isDarkMode ? Colors.white : Colors.black),
-      ),
-      actions: [
-        CircleAvatar(
-          backgroundImage: AssetImage("images/profile_img.jpg"),
-          radius: 20,
-        ).popupMenu(context: context),
+            color: Get.isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
         const SizedBox(width: 20),
       ],
     );
-
   }
 
   _addTaskBar() {
@@ -116,58 +251,95 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addDateBar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 5, left: 20),
+    return
+      Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.blueAccent, width: 2),
+          borderRadius: BorderRadius.circular(8),
+        ),
       child:
       DatePicker(
         DateTime.now(),
         height: 100,
         width: 80,
         initialSelectedDate: DateTime.now(),
-        selectionColor: primaryClr,
+        // selectionColor: primaryClr,
+        selectionColor: Colors.blueAccent,
         selectedTextColor: Colors.white,
         dateTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey)),
+                fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black)),
         dayTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
         monthTextStyle: GoogleFonts.lato(
             textStyle: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
         onDateChange: (date) {
           setState(() {
             _selectedDate = date;
+            print("Selected date: $_selectedDate");
           });
         },
       ),
     );
   }
 
-  _searchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value.toLowerCase();
-          });
-        },
-        decoration: InputDecoration(
-          hintText: "Search tasks by title, description, or category",
-          hintStyle: subTitleStyle,
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          filled: true,
-          fillColor: Get.isDarkMode ? darkGreyClr : Colors.grey[100],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
+
+
+
+
+
+// ------------------------------
+  // _searchBar() {
+  //   return Container(
+  //     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+  //     child: TextField(
+  //       controller: _searchController,
+  //       onChanged: (value) {
+  //         setState(() {
+  //           _searchQuery = value.toLowerCase();
+  //         });
+  //       },
+  //       decoration: InputDecoration(
+  //         hintText: "Search tasks by title, description, or category",
+  //         hintStyle: subTitleStyle,
+  //         prefixIcon: const Icon(Icons.search, color: Colors.grey),
+  //         filled: true,
+  //         fillColor: Get.isDarkMode ? darkGreyClr : Colors.grey[100],
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //           borderSide: BorderSide.none,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // _searchBar() {
+  //   return Container(
+  //     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+  //     child: TextField(
+  //       controller: _searchController,
+  //       onChanged: (value) {
+  //         setState(() {
+  //           _searchQuery = value.toLowerCase();
+  //         });
+  //       },
+  //       decoration: InputDecoration(
+  //         hintText: "Search tasks by title, description, or category",
+  //         hintStyle: subTitleStyle,
+  //         prefixIcon: const Icon(Icons.search, color: Colors.grey),
+  //         filled: true,
+  //         fillColor: Get.isDarkMode ? darkGreyClr : Colors.grey[100],
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //           borderSide: BorderSide.none,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   _showTasks() {
   return Expanded(

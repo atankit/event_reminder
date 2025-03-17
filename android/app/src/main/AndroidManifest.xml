@@ -39,11 +39,17 @@
         </activity>
 
         <meta-data
+            android:name="com.google.firebase.auth.FirebaseAuth"
+            android:value="DEBUG" />
+
+        <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
 
         <meta-data android:name="androidx.biometric.AuthenticatorType" android:value="BIOMETRIC_STRONG" />
-
+        <meta-data
+            android:name="com.google.android.gms.auth.api.signin"
+            android:value="default_web_client_id" />
 
         <receiver
             android:exported="false"

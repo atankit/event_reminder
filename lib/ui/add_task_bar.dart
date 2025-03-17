@@ -86,14 +86,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _appBar(context),
+      appBar: _appBar(context, task: widget.task),
       body: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(
           child: Column(
             children: [
               // Text("Add Task", style: headingStyle),
-              Text(widget.task == null ? "Add Task" : "Update Task", style: headingStyle),
               MyInputField(
                 title: "Title",
                 hint: "Enter your title",
@@ -104,6 +103,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 hint: "Enter your description",
                 controller: _descController,
               ),
+              // MyInputField(
+              //   title: "Date",
+              //   hint: DateFormat.yMd().format(_selectedDate),
+              //   widget: IconButton(
+              //     icon: const Icon(Icons.calendar_today_outlined, color: Colors.grey),
+              //     onPressed: _getDateFromUser,
+              //   ),
+              // ),
               MyInputField(
                 title: "Date",
                 hint: DateFormat.yMd().format(_selectedDate),
@@ -111,7 +118,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   icon: const Icon(Icons.calendar_today_outlined, color: Colors.grey),
                   onPressed: _getDateFromUser,
                 ),
+                onTap: () => _getDateFromUser(), // Add this line
               ),
+
               Row(
                 children: [
                   Expanded(
@@ -122,6 +131,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         icon: const Icon(Icons.access_time_rounded, color: Colors.grey),
                         onPressed: () => _getTimeFromUser(isStartTime: true),
                       ),
+                      onTap: () => _getTimeFromUser(isStartTime: true),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -133,6 +143,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         icon: const Icon(Icons.access_time_rounded, color: Colors.grey),
                         onPressed: () => _getTimeFromUser(isStartTime: false),
                       ),
+                      onTap: () => _getTimeFromUser(isStartTime: false),
                     ),
                   ),
                 ],
@@ -145,16 +156,59 @@ class _AddTaskPageState extends State<AddTaskPage> {
               MyInputField(
                 title: "Category",
                 hint: _selectedCategory,
-                widget: DropdownButton(
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                widget:
+                // DropdownButton(
+                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                //   iconSize: 32,
+                //   elevation: 4,
+                //   style: subTitleStyle,
+                //   underline: Container(height: 0),
+                //   items: categoryList.map((value) {
+                //     return DropdownMenuItem(
+                //       value: value,
+                //       // child: Text(value, style: const TextStyle(color: Colors.black)),
+                //       child: Text(value, style: TextStyle(color: Get.isDarkMode? Colors.white:Colors.black)),
+                //     );
+                //   }).toList(),
+                //   onChanged: (newValue) {
+                //     setState(() {
+                //       _selectedCategory = newValue!;
+                //     });
+                //   },
+                // ),
+                DropdownButton(
+                  padding: EdgeInsets.only(right: 20) ,
+                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
                   iconSize: 32,
-                  elevation: 4,
+                  elevation: 6,
                   style: subTitleStyle,
-                  underline: Container(height: 0),
+                  underline: SizedBox(), // Removes default underline
+                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
                   items: categoryList.map((value) {
                     return DropdownMenuItem(
                       value: value,
-                      child: Text(value, style: const TextStyle(color: Colors.grey)),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3), // Light blue glow
+                              blurRadius: 6,
+                              offset: Offset(2, 3),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Get.isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
                     );
                   }).toList(),
                   onChanged: (newValue) {
@@ -163,20 +217,65 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     });
                   },
                 ),
+
               ),
               MyInputField(
                 title: "Remind",
                 hint: "$_selectedRemind minutes early",
-                widget: DropdownButton(
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                widget:
+                // DropdownButton(
+                //   padding: EdgeInsets.only(right: 20),
+                //   // dropdownColor: Colors.blueAccent,
+                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                //   iconSize: 32,
+                //   elevation: 6,
+                //   style: subTitleStyle,
+                //   underline: Container(height: 0),
+                //   items: remindList.map((value) {
+                //     return DropdownMenuItem(
+                //       value: value,
+                //       child: Text(value.toString()),
+                //     );
+                //   }).toList(),
+                //   onChanged: (newValue) {
+                //     setState(() {
+                //       _selectedRemind = int.parse(newValue.toString());
+                //     });
+                //   },
+                // ),
+                DropdownButton(
+                  padding: EdgeInsets.only(right: 20) ,
+                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
                   iconSize: 32,
-                  elevation: 4,
+                  elevation: 6,
                   style: subTitleStyle,
-                  underline: Container(height: 0),
+                  underline: SizedBox(), // Removes default underline
+                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
                   items: remindList.map((value) {
                     return DropdownMenuItem(
                       value: value,
-                      child: Text(value.toString()),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3), // Light blue glow
+                              blurRadius: 6,
+                              offset: Offset(2, 3),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          value.toString(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Get.isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
                     );
                   }).toList(),
                   onChanged: (newValue) {
@@ -185,20 +284,65 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     });
                   },
                 ),
+
+
               ),
               MyInputField(
                 title: "Repeat",
                 hint: _selectedRepeat,
-                widget: DropdownButton(
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                widget:
+                // DropdownButton(
+                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                //   iconSize: 32,
+                //   elevation: 4,
+                //   style: subTitleStyle,
+                //   underline: Container(height: 0),
+                //   items: repeatList.map((value) {
+                //     return DropdownMenuItem(
+                //       value: value,
+                //       child: Text(value, style: TextStyle(color: Get.isDarkMode? Colors.white:Colors.black)),
+                //     );
+                //   }).toList(),
+                //   onChanged: (newValue) {
+                //     setState(() {
+                //       _selectedRepeat = newValue!;
+                //     });
+                //   },
+                // ),
+
+                DropdownButton(
+                  padding: EdgeInsets.only(right: 20) ,
+                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
                   iconSize: 32,
-                  elevation: 4,
+                  elevation: 6,
                   style: subTitleStyle,
-                  underline: Container(height: 0),
+                  underline: SizedBox(), // Removes default underline
+                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
                   items: repeatList.map((value) {
                     return DropdownMenuItem(
                       value: value,
-                      child: Text(value, style: const TextStyle(color: Colors.grey)),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3), // Light blue glow
+                              blurRadius: 6,
+                              offset: Offset(2, 3),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Get.isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
                     );
                   }).toList(),
                   onChanged: (newValue) {
@@ -207,31 +351,37 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     });
                   },
                 ),
+
               ),
               const SizedBox(height: 10),
-              Text("Attach Media", style: titleStyle),
+              Row(
+                children: [
+                  Text("Attach Media", style: titleStyle),
+                ],
+              ),
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _mediaButton("Image", Icons.image, _pickImage),
-                  _mediaButton("Video", Icons.videocam, _pickVideo),
-                  _mediaButton("File", Icons.attach_file, _pickFile),
+                  _mediaButton("Image", Icons.image, Colors.blueAccent, _pickImage),
+                  _mediaButton("Video", Icons.videocam, Colors.black, _pickVideo),
+                  _mediaButton("File", Icons.attach_file, Colors.red, _pickFile),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               if (_selectedImage != null) _mediaPreview("Image", _selectedImage!.path),
               if (_selectedVideo != null) _mediaPreview("Video", _selectedVideo!.path),
               if (_selectedFile != null) _mediaPreview("File", _selectedFile!.path),
-              const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _colorPalette(),
-                  MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
+                  // MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+               MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -239,7 +389,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-  AppBar _appBar(BuildContext context) {
+  AppBar _appBar(BuildContext context, {required task}) {
     return AppBar(
       elevation: 0,
       backgroundColor: context.theme.primaryColor,
@@ -251,12 +401,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
           color: Get.isDarkMode ? Colors.white : Colors.black,
         ),
       ),
-      actions: const [
-        CircleAvatar(
-          backgroundImage: AssetImage("images/profile_img.jpg"),
-        ),
-        SizedBox(width: 20),
-      ],
+      title: Text(
+        task == null ? "Add Task" : "Update Task",
+        style: headingStyle,
+      ),
     );
   }
 
@@ -400,7 +548,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
 
-  Widget _mediaButton(String label, IconData icon, VoidCallback onTap) {
+  Widget _mediaButton(String label, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -408,7 +556,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           CircleAvatar(
             radius: 30,
             backgroundColor: Colors.grey.shade200,
-            child: Icon(icon, size: 30, color: Colors.grey),
+            child: Icon(icon, size: 30, color: color),
           ),
           const SizedBox(height: 5),
           Text(label, style: subTitleStyle),

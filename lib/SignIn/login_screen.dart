@@ -1,9 +1,9 @@
-import 'package:event_manager/SignIn/register_screen.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:async';
-import 'package:event_manager/SignIn/auth_service.dart';
+import '../SignIn/auth_service.dart';
 import 'package:event_manager/ui/home_page.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -11,67 +11,92 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   List<String> texts = ["Event Management", "Event Reminder"];
   int currentIndex = 0;
+  bool _isObscure = true;
+  bool _isOffline = false; // Track offline mode
 
   @override
   void initState() {
     super.initState();
+    _checkConnectivity();
     _startTextAnimation();
   }
 
+  // Check if device is offline
+  void _checkConnectivity() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _isOffline = true;
+      });
+    }
+  }
+
   void _startTextAnimation() {
-    Timer.periodic(Duration(seconds: 2), (timer) {
+    Future.delayed(Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
           currentIndex = (currentIndex + 1) % texts.length;
         });
+        _startTextAnimation();
       }
     });
   }
 
-  void _signInWithEmail() async {
-    final user = await AuthService.signInWithEmail(
-      _emailController.text,
-      _passwordController.text,
-    );
+  void login() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
+    if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      _showSnackBar('Please enter a valid email!');
+      return;
+    }
+
+    if (password.isEmpty || password.length < 6) {
+      _showSnackBar('Password must be at least 6 characters long!');
+      return;
+    }
+
+    var user = await _authService.loginWithEmail(email, password);
     if (user != null) {
+      _showSnackBar('Login successful!');
       Get.off(() => HomePage());
     } else {
-      _showErrorDialog('Login Failed. Please check your credentials.');
+      _showSnackBar('Login failed! Please check your credentials.');
     }
   }
 
-  void _signInWithGoogle() async {
-    final user = await AuthService.signInWithGoogle();
+  void loginWithGoogle() async {
+    var user = await _authService.signInWithGoogle();
     if (user != null) {
+      _showSnackBar('Google Login successful!');
       Get.off(() => HomePage());
     } else {
-      _showErrorDialog("Google Sign-In failed.");
+      _showSnackBar('Google Login failed!');
     }
   }
 
-  void _offlineLogin() {
-    Get.off(() => HomePage());
+  // Local Login for offline use
+  void loginOffline() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    if (await _authService.loginLocally(email, password)) {
+      _showSnackBar('Offline Login successful!');
+      Get.off(() => HomePage());
+    } else {
+      _showSnackBar('Offline Login failed! Check credentials.');
+    }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(  message,  style: TextStyle(color: Colors.red),),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('OK'),
-          ),
-        ],
-      ),
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -87,10 +112,20 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.asset(
-                  'images/bg.jpg',
-                  height: 240,
-                ),
+                if (_isOffline)
+                  Column(
+                    children: [
+                      Icon(Icons.wifi_off, color: Colors.red, size: 50),
+                      SizedBox(height: 10),
+                      Text(
+                        "You're offline!",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                SizedBox(height: 20),
+                Image.asset('images/bg.jpg', height: 200),
                 AnimatedSwitcher(
                   duration: Duration(milliseconds: 800),
                   transitionBuilder: (widget, animation) {
@@ -102,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: "Lato",
-                      fontSize: 34,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                       color: Colors.blueAccent,
                     ),
@@ -110,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 30),
                 TextField(
-                  controller: _emailController,
+                  controller: emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -118,41 +153,38 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 15),
                 TextField(
-                  controller: _passwordController,
-                  obscureText: true,
+                  controller: passwordController,
+                  obscureText: _isObscure,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: _signInWithEmail,
-                  child: Text('Login with Email',style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    suffixIcon: IconButton(
+                      icon: Icon(_isObscure ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () {
+                        setState(() {
+                          _isObscure = !_isObscure;
+                        });
+                      },
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-            
-                ElevatedButton(
-                  onPressed: () => Get.to(() => RegisterScreen()),
-                  child: Text('Registration',style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
+                SizedBox(height: 30),
                 ElevatedButton.icon(
-                  onPressed: _signInWithGoogle,
+                  onPressed: login,
+                  icon: Icon(Icons.login, color: Colors.white),
+                  label: Text('Login', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 15),
+                ElevatedButton.icon(
+                  onPressed: loginWithGoogle,
                   icon: Icon(Icons.g_mobiledata, color: Colors.white),
                   label: Text('Sign in with Google', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
@@ -163,13 +195,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+                if (_isOffline) ...[
+                  SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: loginOffline,
+                    icon: Icon(Icons.lock, color: Colors.blue),
+                    label: Text('Login Offline', style: TextStyle(color: Colors.black)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 20),
                 TextButton(
-                  onPressed: _offlineLogin,
-                  child: Text(
-                    'Continue Offline',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
+                  onPressed: () => Get.to(() => RegisterScreen()),
+                  child: Text('Don\'t have an account? Register'),
                 ),
               ],
             ),
@@ -181,8 +225,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 }
