@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:event_manager/pin/app_lock_service.dart';
+import 'package:get/get_utils/get_utils.dart';
 
 class ResetPinScreen extends StatefulWidget {
   @override
@@ -59,7 +60,8 @@ class _ResetPinScreenState extends State<ResetPinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Reset or Remove App Lock PIN")),
+      appBar: AppBar(title: Text("Reset or Remove App Lock PIN"),
+      backgroundColor: context.theme.primaryColor, ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -68,23 +70,42 @@ class _ResetPinScreenState extends State<ResetPinScreen> {
               controller: oldPinController,
               obscureText: true,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Enter Current PIN"),
+              decoration: InputDecoration(
+                labelText: "Enter Current PIN",
+                border: OutlineInputBorder( // Adds a border
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                  borderSide: BorderSide(color: Colors.blue, width: 2), // Border color
+                ),
+                focusedBorder: OutlineInputBorder( // Border when focused
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Padding inside the input
+              ),
             ),
             SizedBox(height: 16),
             TextField(
               controller: newPinController,
               obscureText: true,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Enter New PIN"),
+              decoration: InputDecoration(
+                labelText: "Enter New PIN",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
             ),
+
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text("Cancel"),
-                ),
                 ElevatedButton(
                   onPressed: _updatePin,
                   child: Text("Update PIN"),

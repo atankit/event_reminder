@@ -128,7 +128,7 @@ class _MyInputFieldState extends State<MyInputField> {
               hintStyle: subTitleStyle,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
                   color: Colors.grey,
                   width: 1.0,

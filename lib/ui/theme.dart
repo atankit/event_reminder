@@ -10,7 +10,8 @@ const Color white = Colors.white;
 const primaryClr = bluishClr;
 const Color darkGreyClr = Color(0xFF121212);
 Color darkHeaderClr = Color(0xFF525050);
-
+// Custom color variable (can be updated dynamically)
+Color customColor = Colors.teal; // Default custom color
 
 class Themes {
  static final light = ThemeData(
@@ -70,5 +71,16 @@ TextStyle get subTitleStyle{
       // color: Get.isDarkMode? Colors.grey[100]:Colors.grey[600]
       color: Get.isDarkMode?Colors.grey[100]:Colors.black
   )
+ );
+}
+
+TextStyle get subTitleStyle2{
+ return GoogleFonts.lato (
+     textStyle: TextStyle(
+         fontSize: 14,
+         fontWeight: FontWeight.w400,
+         // color: Get.isDarkMode? Colors.grey[100]:Colors.grey[600]
+         color: Get.isDarkMode?Colors.grey[100]:Colors.black
+     )
  );
 }

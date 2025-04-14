@@ -213,7 +213,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () => Get.to(() => RegisterScreen()),
-                  child: Text('Don\'t have an account? Register'),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: "Don't have an account? "),
+                        TextSpan(
+                          text: 'Register',
+                          style: TextStyle(
+                              decoration: TextDecoration.underline),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

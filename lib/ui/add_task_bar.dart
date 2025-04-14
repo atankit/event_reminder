@@ -1,16 +1,19 @@
-
 import 'dart:io';
 import 'package:event_manager/controllers/task_controller.dart';
 import 'package:event_manager/models/task.dart';
-import 'package:event_manager/services/notification_services.dart';
+import 'package:event_manager/ui/media_preview/image_screen.dart';
 import 'package:event_manager/ui/theme.dart';
-import 'package:event_manager/ui/widgets/button.dart';
+import 'package:event_manager/ui/media_preview/vdo_player_screen.dart';
+import 'package:event_manager/ui/widgets/create_task_btn.dart';
 import 'package:event_manager/ui/widgets/input_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path/path.dart' as p;
 
 class AddTaskPage extends StatefulWidget {
   final Task? task;
@@ -22,8 +25,6 @@ class AddTaskPage extends StatefulWidget {
 
 class _AddTaskPageState extends State<AddTaskPage> {
   final TaskController _taskController = Get.put(TaskController()); //find
-
-
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
@@ -58,7 +59,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-
   void _loadTaskData(Task task) {
     _titleController.text = task.title!;
     _descController.text = task.description!;
@@ -81,7 +81,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _selectedFile = File(task.filePath!);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -113,12 +112,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
               // ),
               MyInputField(
                 title: "Date",
-                hint: DateFormat.yMd().format(_selectedDate),
+                hint: DateFormat('dd-MM-yyyy').format(_selectedDate),
                 widget: IconButton(
-                  icon: const Icon(Icons.calendar_today_outlined, color: Colors.grey),
+                  icon: const Icon(Icons.calendar_today_outlined,
+                      color: Colors.grey),
                   onPressed: _getDateFromUser,
                 ),
-                onTap: () => _getDateFromUser(), // Add this line
+                onTap: () => _getDateFromUser(),
               ),
 
               Row(
@@ -128,7 +128,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       title: "Start Time",
                       hint: _startTime,
                       widget: IconButton(
-                        icon: const Icon(Icons.access_time_rounded, color: Colors.grey),
+                        icon: const Icon(Icons.access_time_rounded,
+                            color: Colors.grey),
                         onPressed: () => _getTimeFromUser(isStartTime: true),
                       ),
                       onTap: () => _getTimeFromUser(isStartTime: true),
@@ -140,7 +141,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       title: "End Time",
                       hint: _endTime,
                       widget: IconButton(
-                        icon: const Icon(Icons.access_time_rounded, color: Colors.grey),
+                        icon: const Icon(Icons.access_time_rounded,
+                            color: Colors.grey),
                         onPressed: () => _getTimeFromUser(isStartTime: false),
                       ),
                       onTap: () => _getTimeFromUser(isStartTime: false),
@@ -153,206 +155,120 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 hint: "Enter your location",
                 controller: _locationController,
               ),
+
               MyInputField(
                 title: "Category",
                 hint: _selectedCategory,
-                widget:
-                // DropdownButton(
-                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                //   iconSize: 32,
-                //   elevation: 4,
-                //   style: subTitleStyle,
-                //   underline: Container(height: 0),
-                //   items: categoryList.map((value) {
-                //     return DropdownMenuItem(
-                //       value: value,
-                //       // child: Text(value, style: const TextStyle(color: Colors.black)),
-                //       child: Text(value, style: TextStyle(color: Get.isDarkMode? Colors.white:Colors.black)),
-                //     );
-                //   }).toList(),
-                //   onChanged: (newValue) {
-                //     setState(() {
-                //       _selectedCategory = newValue!;
-                //     });
-                //   },
-                // ),
-                DropdownButton(
-                  padding: EdgeInsets.only(right: 20) ,
-                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
-                  iconSize: 32,
-                  elevation: 6,
-                  style: subTitleStyle,
-                  underline: SizedBox(), // Removes default underline
-                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
-                  items: categoryList.map((value) {
-                    return DropdownMenuItem(
-                      value: value,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3), // Light blue glow
-                              blurRadius: 6,
-                              offset: Offset(2, 3),
-                            ),
-                          ],
-                        ),
+                widget: Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: DropdownButton(
+                    icon: const Icon(Icons.keyboard_arrow_down,
+                        color: Colors.grey),
+                    iconSize: 32,
+                    elevation: 4,
+                    style: subTitleStyle,
+                    underline: Container(height: 0),
+                    items: categoryList.map((value) {
+                      return DropdownMenuItem(
+                        value: value,
                         child: Text(
                           value,
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Get.isDarkMode ? Colors.white : Colors.black,
-                          ),
+                              color:
+                                  Get.isDarkMode ? Colors.white : Colors.black),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedCategory = newValue!;
-                    });
-                  },
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue!;
+                      });
+                    },
+                  ),
                 ),
-
               ),
+
               MyInputField(
                 title: "Remind",
                 hint: "$_selectedRemind minutes early",
-                widget:
-                // DropdownButton(
-                //   padding: EdgeInsets.only(right: 20),
-                //   // dropdownColor: Colors.blueAccent,
-                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                //   iconSize: 32,
-                //   elevation: 6,
-                //   style: subTitleStyle,
-                //   underline: Container(height: 0),
-                //   items: remindList.map((value) {
-                //     return DropdownMenuItem(
-                //       value: value,
-                //       child: Text(value.toString()),
-                //     );
-                //   }).toList(),
-                //   onChanged: (newValue) {
-                //     setState(() {
-                //       _selectedRemind = int.parse(newValue.toString());
-                //     });
-                //   },
-                // ),
-                DropdownButton(
-                  padding: EdgeInsets.only(right: 20) ,
-                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
-                  iconSize: 32,
-                  elevation: 6,
-                  style: subTitleStyle,
-                  underline: SizedBox(), // Removes default underline
-                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
-                  items: remindList.map((value) {
-                    return DropdownMenuItem(
-                      value: value,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3), // Light blue glow
-                              blurRadius: 6,
-                              offset: Offset(2, 3),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          value.toString(),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Get.isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
+                widget: Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButton(
+                        icon: const Icon(Icons.keyboard_arrow_down,
+                            color: Colors.grey),
+                        iconSize: 32,
+                        elevation: 4,
+                        style: subTitleStyle,
+                        underline: Container(height: 0),
+                        items: remindList.map((value) {
+                          return DropdownMenuItem(
+                            value: value,
+                            // child: Text(value.toString()),
+                            child: Text("$value min"),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedRemind = int.parse(newValue.toString());
+                          });
+                        },
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedRemind = int.parse(newValue.toString());
-                    });
-                  },
+                    ],
+                  ),
                 ),
-
-
               ),
-              MyInputField(
-                title: "Repeat",
-                hint: _selectedRepeat,
-                widget:
-                // DropdownButton(
-                //   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                //   iconSize: 32,
-                //   elevation: 4,
-                //   style: subTitleStyle,
-                //   underline: Container(height: 0),
-                //   items: repeatList.map((value) {
-                //     return DropdownMenuItem(
-                //       value: value,
-                //       child: Text(value, style: TextStyle(color: Get.isDarkMode? Colors.white:Colors.black)),
-                //     );
-                //   }).toList(),
-                //   onChanged: (newValue) {
-                //     setState(() {
-                //       _selectedRepeat = newValue!;
-                //     });
-                //   },
-                // ),
 
-                DropdownButton(
-                  padding: EdgeInsets.only(right: 20) ,
-                  dropdownColor: Get.isDarkMode ? Colors.grey[900] : Colors.white, // Dark mode support
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey), // Stylish blue icon
-                  iconSize: 32,
-                  elevation: 6,
-                  style: subTitleStyle,
-                  underline: SizedBox(), // Removes default underline
-                  borderRadius: BorderRadius.circular(12), // Smooth rounded corners
-                  items: repeatList.map((value) {
-                    return DropdownMenuItem(
-                      value: value,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3), // Light blue glow
-                              blurRadius: 6,
-                              offset: Offset(2, 3),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Get.isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedRepeat = newValue!;
-                    });
-                  },
-                ),
+              // MyInputField(
+              //   title: "Repeat",
+              //   hint: _selectedRepeat,
+              //   widget: Padding(
+              //     padding: const EdgeInsets.only(right: 15),
+              //     child: Row(
+              //       mainAxisSize: MainAxisSize.min,
+              //       children: [
+              //         // Vertical Divider
+              //         // Container(
+              //         //   width: 1,
+              //         //   height: 40, // Adjust height as per design
+              //         //   color: Colors.grey, // Divider color (changeable)
+              //         // ),
+              //         // const SizedBox(width: 10), // Space between divider and dropdown
+              //
+              //         // Dropdown Button
+              //         DropdownButton(
+              //           icon: const Icon(Icons.keyboard_arrow_down,
+              //               color: Colors.grey),
+              //           iconSize: 32,
+              //           elevation: 4,
+              //           style: subTitleStyle,
+              //           underline: Container(height: 0),
+              //           items: repeatList.map((value) {
+              //             return DropdownMenuItem(
+              //               value: value,
+              //               child: Text(
+              //                 value,
+              //                 style: TextStyle(
+              //                   color: Get.isDarkMode
+              //                       ? Colors.white
+              //                       : Colors.black,
+              //                 ),
+              //               ),
+              //             );
+              //           }).toList(),
+              //           onChanged: (newValue) {
+              //             setState(() {
+              //               _selectedRepeat = newValue!;
+              //             });
+              //           },
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
 
-              ),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -363,24 +279,49 @@ class _AddTaskPageState extends State<AddTaskPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _mediaButton("Image", Icons.image, Colors.blueAccent, _pickImage),
-                  _mediaButton("Video", Icons.videocam, Colors.black, _pickVideo),
-                  _mediaButton("File", Icons.attach_file, Colors.red, _pickFile),
+                  _mediaButton(
+                      "Image", Icons.image, Colors.blueAccent, _pickImage),
+                  _mediaButton(
+                      "Video", Icons.videocam, Colors.black, _pickVideo),
+                  _mediaButton(
+                      "File", Icons.attach_file, Colors.red, _pickFile),
                 ],
               ),
               const SizedBox(height: 10),
-              if (_selectedImage != null) _mediaPreview("Image", _selectedImage!.path),
-              if (_selectedVideo != null) _mediaPreview("Video", _selectedVideo!.path),
-              if (_selectedFile != null) _mediaPreview("File", _selectedFile!.path),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  if (_selectedImage != null)
+                    _mediaPreview("Image", _selectedImage!.path, (){
+                      setState(() {
+                        _selectedImage = null;
+                      });
+                    }),
+                  if (_selectedVideo != null)
+                    _mediaPreview("Video", _selectedVideo!.path, (){
+                      setState(() {
+                        _selectedVideo = null;
+                      });
+                    }),
+                  if (_selectedFile != null)
+                    _mediaPreview("File", _selectedFile!.path, (){
+                      setState(() {
+                        _selectedFile = null;
+                      });
+                    }),
+                ],
+              ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _colorPalette(),
-                  // MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
                 ],
               ),
               const SizedBox(height: 16),
-               MyButton(label: widget.task == null ?  "Create Task" : "Update Task", onTap: _validateData),
+              MyCreateTaskBtn(
+                  label: widget.task == null ? "Create Task" : "Update Task",
+                  onTap: _validateData),
               const SizedBox(height: 12),
             ],
           ),
@@ -421,7 +362,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       });
     }
   }
-  
 
   Future<void> _getTimeFromUser({required bool isStartTime}) async {
     TimeOfDay? pickedTime = await showTimePicker(
@@ -443,22 +383,23 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-
-
-
   Widget _colorPalette() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Color", style: titleStyle),
+        Text("Select task color", style: titleStyle),
         const SizedBox(height: 8),
         Wrap(
-          children: List.generate(3, (index) {
+          children: List.generate(4, (index) {
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  _selectedColor = index;
-                });
+                if (index == 3) {
+                  _showColorPicker(); // Open color picker when selecting the last option
+                } else {
+                  setState(() {
+                    _selectedColor = index;
+                  });
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 8.0),
@@ -467,11 +408,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   backgroundColor: index == 0
                       ? primaryClr
                       : index == 1
-                      ? pinkClr
-                      : yellowClr,
+                          ? pinkClr
+                          : index == 2
+                              ? yellowClr
+                              : _customColor, // User-selected color
+
                   child: _selectedColor == index
                       ? const Icon(Icons.done, color: Colors.white, size: 16)
-                      : Container(),
+                      : (index == 3
+                          ? const Icon(Icons.color_lens,
+                              color: Colors.white,
+                              size: 16) // Color picker icon
+                          : Container()),
                 ),
               ),
             );
@@ -480,6 +428,51 @@ class _AddTaskPageState extends State<AddTaskPage> {
       ],
     );
   }
+
+  void _showColorPicker() {
+    Color tempColor = _customColor;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Pick a color"),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: tempColor,
+              onColorChanged: (Color color) {
+                tempColor = color;
+              },
+              showLabel: false,
+              pickerAreaHeightPercent: 0.8,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _customColor = tempColor;
+                  customColor =
+                      tempColor; // ✅ Update global color in theme.dart
+                  _selectedColor = 3;
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Select"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Declare a variable for the custom color
+  Color _customColor = Colors.blue; // Default custom color
 
   Future<void> _validateData() async {
     if (_titleController.text.isNotEmpty && _descController.text.isNotEmpty) {
@@ -522,7 +515,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
     print("Task added with ID: $value");
   }
 
-
   Future<void> _updateTaskInDb() async {
     Task updatedTask = Task(
       id: widget.task!.id, // Use the existing task ID
@@ -544,11 +536,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
     await _taskController.updateEvents(updatedTask);
     print("Task updated: ${updatedTask.title}");
     print('Updating Task with ID: ${widget.task!.id}');
-
   }
 
-
-  Widget _mediaButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _mediaButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -565,21 +556,212 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-  Widget _mediaPreview(String type, String path) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("$type Preview:", style: subTitleStyle),
-        const SizedBox(height: 10),
-        type == "Image"
-            ? Image.file(File(path), width: double.infinity, height: 200)
-            : Text("$type: $path", style: subTitleStyle),
-      ],
+  Widget _mediaPreview(String type, String path, VoidCallback onDelete) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          if (type == "Image")
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            FullImageScreen(imagePath: path),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(path),
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: onDelete,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else if (type == "Video")
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => VideoPlayerScreen(videoPath: path),
+                      ),
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const Icon(Icons.play_circle_fill,
+                          size: 40, color: Colors.white),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: onDelete,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+
+          else if (type == "PDF" && path.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                OpenFilex.open(path);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.black, // Dark background similar to the image
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color:
+                            Colors.red.shade600, // Red background for PDF icon
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.picture_as_pdf,
+                          size: 24, color: Colors.white),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        path.split('/').last, // Show only the filename
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Text(
+                      "PDF",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            else
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      OpenFilex.open(path); // Open the PDF file
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Get.isDarkMode ? Colors.black : Colors.white,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.picture_as_pdf,
+                            color: Get.isDarkMode ? Colors.white : Colors.black,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            path.split('/').last,
+                            style: subTitleStyle2.copyWith(fontSize: 10),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: onDelete,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+
+
+        ],
+      ),
     );
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       setState(() {
         _selectedImage = File(pickedImage.path);
@@ -588,7 +770,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   Future<void> _pickVideo() async {
-    final XFile? pickedVideo = await _picker.pickVideo(source: ImageSource.gallery);
+    final XFile? pickedVideo =
+        await _picker.pickVideo(source: ImageSource.gallery);
     if (pickedVideo != null) {
       setState(() {
         _selectedVideo = File(pickedVideo.path);
@@ -596,12 +779,26 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  // Future<void> _pickFile() async {
+  //   FilePickerResult? result = await FilePicker.platform.pickFiles();
+  //   if (result != null && result.files.single.path != null) {
+  //     setState(() {
+  //       _selectedFile = File(result.files.single.path!);
+  //     });
+  //   }
+  // }
+   // Add Restriction for only pdf file
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'], // Only allow PDF
+    );
+
     if (result != null && result.files.single.path != null) {
       setState(() {
         _selectedFile = File(result.files.single.path!);
       });
     }
   }
+
 }

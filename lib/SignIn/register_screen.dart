@@ -71,6 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         title: Text("Registration"),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
       ),
       body: Padding(
@@ -136,9 +137,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(height: 20),
             TextButton(
               onPressed: () => Get.back(),
-              child: Text(
-                'Already have an account? Login',
-                style: TextStyle(color: Colors.grey[700]),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Already have an account? ',
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    TextSpan(
+                      text: 'Login',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        decoration: TextDecoration.underline, // This applies underline
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

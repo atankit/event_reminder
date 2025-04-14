@@ -162,7 +162,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text("Unlock", style: TextStyle(fontSize: 16)),
+                    Text("Unlock", style: TextStyle(fontSize: 16, color: Colors.white)),
                   ],
                 ),
               ),

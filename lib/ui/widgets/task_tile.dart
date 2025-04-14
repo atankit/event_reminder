@@ -1,8 +1,9 @@
 
-
 import 'dart:io';
-
 import 'package:event_manager/models/task.dart';
+import 'package:event_manager/ui/media_preview/image_screen.dart';
+import 'package:event_manager/ui/media_preview/pdf_screen.dart';
+import 'package:event_manager/ui/media_preview/vdo_player_screen.dart';
 import 'package:event_manager/ui/theme.dart';
 import 'package:event_manager/ui/vdo_player_widget.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +11,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 
-
-class TaskTile extends StatelessWidget {
+class TaskTile extends StatefulWidget {
   final Task? task;
+
   TaskTile(this.task);
+
+  @override
+  State<TaskTile> createState() => _TaskTileState();
+}
+
+class _TaskTileState extends State<TaskTile> {
+  bool isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,189 +33,247 @@ class TaskTile extends StatelessWidget {
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: _getBGClr(task?.color ?? 0),
+          color: _getBGClr(widget.task?.color ?? 0),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    task?.title ?? "",
-                    style: GoogleFonts.lato(
-                      textStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+            // Compact View (Header)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isExpanded)
+                  Container(
+                    width: 50,
+                    height: 50,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(Icons.calendar_today_sharp, color: Colors.white, size: 52),
+                        Container(
+                          margin: EdgeInsets.only(top: 14),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _getDay(widget.task?.date ?? ''),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              Text(
+                                _getMonth(widget.task?.date ?? ''),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 8),
 
-                  // Time Range
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                SizedBox(width: 12),
+
+                // Title & Description
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        color: Colors.grey[200],
-                        size: 18,
+                      Text( "Title : ${widget.task?.title ?? ''}",
+                        style: GoogleFonts.lato(
+                          textStyle: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(width: 4),
                       Text(
-                        "${task?.startTime ?? 'N/A'} - ${task?.endTime ?? 'N/A'}",
+                        "Description : ${widget.task?.description ?? ''}",
                         style: GoogleFonts.lato(
                           textStyle: TextStyle(fontSize: 14, color: Colors.grey[100]),
                         ),
+                        overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                        maxLines: isExpanded ? null : 1,
                       ),
+
                     ],
                   ),
+                ),
 
-                  // Description and Location
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          task?.description ?? "",
-                          style: GoogleFonts.lato(
-                            textStyle: TextStyle(fontSize: 14, color: Colors.grey[100]),
+                // Expand Button
+                IconButton(
+                  icon: Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isExpanded = !isExpanded;
+                    });
+                  },
+                ),
+              ],
+            ),
+
+            // EXPANDED DETAILS (INSIDE the Column!)
+            if (isExpanded) ...[
+              SizedBox(height: 10),
+              _buildDetailRow(Icons.category, "Category", widget.task?.category ?? "N/A"),
+              _buildDetailRow(Icons.date_range, "Date", widget.task?.date ?? "N/A"),
+              _buildDetailRow(Icons.access_time_rounded, "Time",
+                  "${widget.task?.startTime ?? ''} - ${widget.task?.endTime ?? ''}"),
+              _buildDetailRow(Icons.location_on, "Location", widget.task?.location ?? "No Location"),
+
+              SizedBox(height: 10),
+              // if ((widget.task?.photoPath != null ) ||
+              //     (widget.task?.videoPath != null ) ||
+              //     (widget.task?.filePath != null )) ...[
+              //   Text(
+              //     "Attached Media:",
+              //     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              //   ),
+              //   SizedBox(height: 5),
+              //   Row(
+              //     children: [
+              //       if (widget.task?.photoPath != null &&
+              //           widget.task!.photoPath != "No Image Found!")
+              //         // Icon(Icons.image, color: Colors.white),
+              //
+              //       if (widget.task?.videoPath != null &&
+              //           widget.task!.videoPath != "No Video Found!")
+              //         Icon(Icons.videocam, color: Colors.white),
+              //       if (widget.task?.filePath != null &&
+              //           widget.task!.filePath != "No File Found!")
+              //         Icon(Icons.insert_drive_file, color: Colors.white),
+              //     ],
+              //   ),
+              // ],
+
+              if ((widget.task?.photoPath != null && widget.task!.photoPath != "No Image Found!") ||
+                  (widget.task?.videoPath != null && widget.task!.videoPath != "No Video Found!") ||
+                  (widget.task?.filePath != null && widget.task!.filePath != "No File Found!")) ...[
+                Text(
+                  "Attached Media:",
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (widget.task?.photoPath != null &&
+                        widget.task!.photoPath != "No Image Found!")
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FullImageScreen(imagePath: widget.task!.photoPath!),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          margin: EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            image: DecorationImage(
+                              image: FileImage(File(widget.task!.photoPath!)),
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(width: 8),
 
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.grey[200],
-                            size: 18,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            task?.location ?? "No location",
-                            style: GoogleFonts.lato(
-                              textStyle: TextStyle(fontSize: 13, color: Colors.grey[100]),
+
+                    if (widget.task?.videoPath != null &&
+                        widget.task!.videoPath != "No Video Found!")
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VideoPlayerScreen(videoPath: widget.task!.videoPath!),
                             ),
-                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          margin: EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.black45,
                           ),
-                      SizedBox(width: 8),
-                      Icon(
-                            Icons.category,
-                            color: Colors.grey[200],
-                            size: 18,
+                          child: Center(
+                            child: Icon(Icons.play_circle_fill, color: Colors.white),
                           ),
-                          SizedBox(width: 4),
-                          Text(
-                            task?.category ?? "No category",
-                            style: GoogleFonts.lato(
-                              textStyle: TextStyle(fontSize: 13, color: Colors.grey[100]),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                    ],
-                  ),
-
-                  SizedBox(height: 8),
-
-                  // Media Display
-                  if (task?.photoPath != null && task!.photoPath != "No Image Found!")
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(task!.photoPath!),
-                        fit: BoxFit.cover,
-                        height: 160,
-                        width: double.infinity,
-                      ),
-                    ),
-                  if (task?.videoPath != null && task!.videoPath != "No Video Found!")
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: VideoPlayerWidget(videoPath: task!.videoPath!),
-                    ),
-
-                  if (task?.filePath != null && task!.filePath != "No File Found!")
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.insert_drive_file,
-                            color: Colors.grey[200],
-                            size: 18,
-                          ),
-                          SizedBox(width: 4),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                OpenFilex.open(task!.filePath!);
-                              },
-                              child: Text(
-                                task!.filePath!.split('/').last,
-                                style: GoogleFonts.lato(
-                                  textStyle: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey[200], // Indicate it's clickable
-
-                                  ),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      // Share Button
-                      IconButton(
-                        onPressed: _shareTaskDetails,
-                        icon: Icon(Icons.share_outlined, color: Colors.grey[200]),
+                        ),
                       ),
 
-                    ],
-                  )
-                ],
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 10),
-              height: 100,
-              width: 1,
-              color: Colors.grey[200]!.withOpacity(0.7),
-            ),
-            RotatedBox(
-              quarterTurns: 3,
-              child: Text(
-                task!.isCompleted == 1 ? "COMPLETED" : "EVENT",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+
+
+                    if (widget.task?.filePath != null &&
+                        widget.task!.filePath != "No File Found!")
+                      GestureDetector(
+                        onTap: () {
+                          OpenFilex.open(widget.task!.filePath!);
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          margin: EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white24,
+                          ),
+                          child: Center(
+                            child: Icon(Icons.insert_drive_file, color: Colors.white),
+                          ),
+                        ),
+                      ),
+
+                  ],
                 ),
-              ),
-            ),
+              ],
+
+
+            ],
           ],
         ),
-
       ),
-
     );
   }
 
 
-  // Background color based on task color index
-  _getBGClr(int no) {
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 18),
+          SizedBox(width: 6),
+          Text(
+            "$label: ",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(color: Colors.white),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getBGClr(int no) {
     switch (no) {
       case 0:
         return bluishClr;
@@ -215,61 +281,306 @@ class TaskTile extends StatelessWidget {
         return pinkClr;
       case 2:
         return yellowClr;
+      case 3:
+        return customColor;
       default:
         return bluishClr;
     }
   }
-
-// Share Task Details
-  void _shareTaskDetails() async {
-    final taskDetails = '''
-Event Details:
-Title: ${task?.title ?? "No Title"}
-Date: ${task?.date ?? "No Date"}
-Time: ${task?.startTime ?? "N/A"} - ${task?.endTime ?? "N/A"}
-Description: ${task?.description ?? "No Description"}
-Location: ${task?.location ?? "No Location"}
-Category: ${task?.category ?? "No Category"}
-  ''';
-
-    List<XFile> filesToShare = [];
-
-    // Add image if exists
-    if (task?.photoPath != null && task!.photoPath != "No Image Found!") {
-      File imageFile = File(task!.photoPath!);
-      if (await imageFile.exists()) {
-        filesToShare.add(XFile(imageFile.path));
-      }
-    }
-
-    // Add video if exists
-    if (task?.videoPath != null && task!.videoPath != "No Video Found!") {
-      File videoFile = File(task!.videoPath!);
-      if (await videoFile.exists()) {
-        filesToShare.add(XFile(videoFile.path));
-      }
-    }
-
-    // Add file if exists
-    if (task?.filePath != null && task!.filePath!.isNotEmpty) {
-      File file = File(task!.filePath!);
-      if (await file.exists()) {
-        filesToShare.add(XFile(file.path));
-      } else {
-        print("File does not exist: ${task!.filePath}");
-      }
-    }
-
-    // Share media and text together
-    if (filesToShare.isNotEmpty) {
-      await Share.shareXFiles(
-        filesToShare,
-        text: taskDetails,
-      );
-    } else {
-      // If no media, just share text
-      await Share.share(taskDetails);
-    }
-  }
-
 }
+
+
+String _getDay(String date) {
+  try {
+    final parts = date.split('/');
+    return parts[1];
+  } catch (e) {
+    return '';
+  }
+}
+String _getMonth(String date) {
+  try {
+    final parts = date.split('/');
+    int month = int.tryParse(parts[0]) ?? 0;
+    List<String> months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month];
+  } catch (e) {
+    return '';
+  }
+}
+
+
+//
+// class TaskTile extends StatelessWidget {
+//   final Task? task;
+//
+//   TaskTile(this.task);
+//
+//
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       padding: EdgeInsets.symmetric(horizontal: 20),
+//       width: MediaQuery.of(context).size.width,
+//       margin: EdgeInsets.only(bottom: 12),
+//       child: Container(
+//         padding: EdgeInsets.all(16),
+//         decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(16),
+//           color: _getBGClr(task?.color ?? 0),
+//         ),
+//         child: Row(
+//           children: [
+//             Expanded(
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Title
+//                   Text(
+//                     task?.title ?? "",
+//                     style: GoogleFonts.lato(
+//                       textStyle: TextStyle(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.bold,
+//                         color: Colors.white,
+//                       ),
+//                     ),
+//                   ),
+//                   SizedBox(height: 8),
+//
+//                   // Time Range
+//                   Row(
+//                     crossAxisAlignment: CrossAxisAlignment.center,
+//                     children: [
+//                       Icon(
+//                         Icons.access_time_rounded,
+//                         color: Colors.grey[200],
+//                         size: 18,
+//                       ),
+//                       SizedBox(width: 4),
+//                       Text(
+//                         "${task?.startTime ?? 'N/A'} - ${task?.endTime ?? 'N/A'}",
+//                         style: GoogleFonts.lato(
+//                           textStyle: TextStyle(fontSize: 14, color: Colors.grey[100]),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//
+//                   // Description and Location
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                     children: [
+//                       Expanded(
+//                         flex: 2,
+//                         child: Text(
+//                           task?.description ?? "",
+//                           style: GoogleFonts.lato(
+//                             textStyle: TextStyle(fontSize: 14, color: Colors.grey[100]),
+//                           ),
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                       ),
+//                       SizedBox(width: 8),
+//
+//                           Icon(
+//                             Icons.location_on,
+//                             color: Colors.grey[200],
+//                             size: 18,
+//                           ),
+//                           SizedBox(width: 4),
+//                           Text(
+//                             task?.location ?? "No location",
+//                             style: GoogleFonts.lato(
+//                               textStyle: TextStyle(fontSize: 13, color: Colors.grey[100]),
+//                             ),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                       SizedBox(width: 8),
+//                       Icon(
+//                             Icons.category,
+//                             color: Colors.grey[200],
+//                             size: 18,
+//                           ),
+//                           SizedBox(width: 4),
+//                           Text(
+//                             task?.category ?? "No category",
+//                             style: GoogleFonts.lato(
+//                               textStyle: TextStyle(fontSize: 13, color: Colors.grey[100]),
+//                             ),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//
+//                     ],
+//                   ),
+//
+//                   SizedBox(height: 8),
+//
+//                   // Media Display
+//                   if (task?.photoPath != null && task!.photoPath != "No Image Found!")
+//                     ClipRRect(
+//                       borderRadius: BorderRadius.circular(8),
+//                       child: Image.file(
+//                         File(task!.photoPath!),
+//                         fit: BoxFit.cover,
+//                         height: 160,
+//                         width: double.infinity,
+//                       ),
+//                     ),
+//                   if (task?.videoPath != null && task!.videoPath != "No Video Found!")
+//                     Padding(
+//                       padding: const EdgeInsets.only(top: 8.0),
+//                       child: VideoPlayerWidget(videoPath: task!.videoPath!),
+//                     ),
+//
+//                   if (task?.filePath != null && task!.filePath != "No File Found!")
+//                     Padding(
+//                       padding: const EdgeInsets.only(top: 8.0),
+//                       child: Row(
+//                         children: [
+//                           Icon(
+//                             Icons.insert_drive_file,
+//                             color: Colors.grey[200],
+//                             size: 18,
+//                           ),
+//                           SizedBox(width: 4),
+//                           Expanded(
+//                             child: GestureDetector(
+//                               onTap: () {
+//                                 OpenFilex.open(task!.filePath!);
+//                               },
+//                               child: Text(
+//                                 task!.filePath!.split('/').last,
+//                                 style: GoogleFonts.lato(
+//                                   textStyle: TextStyle(
+//                                     fontSize: 13,
+//                                     color: Colors.grey[200], // Indicate it's clickable
+//
+//                                   ),
+//                                 ),
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//
+//                   SizedBox(height: 8),
+//
+//                   Row(
+//                     children: [
+//                       // Share Button
+//                       IconButton(
+//                         onPressed: _shareTaskDetails,
+//                         icon: Icon(Icons.share_outlined, color: Colors.grey[200]),
+//                       ),
+//
+//                     ],
+//                   )
+//                 ],
+//               ),
+//             ),
+//             Container(
+//               margin: EdgeInsets.symmetric(horizontal: 10),
+//               height: 100,
+//               width: 1,
+//               color: Colors.grey[200]!.withOpacity(0.7),
+//             ),
+//             RotatedBox(
+//               quarterTurns: 3,
+//               child: Text(
+//                 task!.isCompleted == 1 ? "COMPLETED" : "EVENT",
+//                 style: GoogleFonts.lato(
+//                   textStyle: TextStyle(
+//                       fontSize: 10,
+//                       fontWeight: FontWeight.bold,
+//                       color: Colors.white),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//
+//       ),
+//
+//     );
+//   }
+//
+//
+//   // Background color based on task color index
+//   _getBGClr(int no) {
+//     switch (no) {
+//       case 0:
+//         return bluishClr;
+//       case 1:
+//         return pinkClr;
+//       case 2:
+//         return yellowClr;
+//        //   add custom color choose from colopicker
+//       case 3: // Custom color case
+//         return customColor;
+//       default:
+//         return bluishClr;
+//     }
+//   }
+//
+//
+//
+// // Share Task Details
+//   void _shareTaskDetails() async {
+//     final taskDetails = '''
+// Event Details:
+// Title: ${task?.title ?? "No Title"}
+// Date: ${task?.date ?? "No Date"}
+// Time: ${task?.startTime ?? "N/A"} - ${task?.endTime ?? "N/A"}
+// Description: ${task?.description ?? "No Description"}
+// Location: ${task?.location ?? "No Location"}
+// Category: ${task?.category ?? "No Category"}
+//   ''';
+//
+//     List<XFile> filesToShare = [];
+//
+//     // Add image if exists
+//     if (task?.photoPath != null && task!.photoPath != "No Image Found!") {
+//       File imageFile = File(task!.photoPath!);
+//       if (await imageFile.exists()) {
+//         filesToShare.add(XFile(imageFile.path));
+//       }
+//     }
+//
+//     // Add video if exists
+//     if (task?.videoPath != null && task!.videoPath != "No Video Found!") {
+//       File videoFile = File(task!.videoPath!);
+//       if (await videoFile.exists()) {
+//         filesToShare.add(XFile(videoFile.path));
+//       }
+//     }
+//
+//     // Add file if exists
+//     if (task?.filePath != null && task!.filePath!.isNotEmpty) {
+//       File file = File(task!.filePath!);
+//       if (await file.exists()) {
+//         filesToShare.add(XFile(file.path));
+//       } else {
+//         print("File does not exist: ${task!.filePath}");
+//       }
+//     }
+//
+//     // Share media and text together
+//     if (filesToShare.isNotEmpty) {
+//       await Share.shareXFiles(
+//         filesToShare,
+//         text: taskDetails,
+//       );
+//     } else {
+//       // If no media, just share text
+//       await Share.share(taskDetails);
+//     }
+//   }
+//
+// }

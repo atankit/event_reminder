@@ -1,3 +1,10 @@
+import 'package:event_manager/SignIn/login_screen.dart';
+import 'package:event_manager/cloud%20backup/backup_restore.dart';
+import 'package:event_manager/pin/app_lock_service.dart';
+import 'package:event_manager/pin/reset_pin_screen.dart';
+import 'package:event_manager/pin/set_pin_screen.dart';
+import 'package:event_manager/services/pdf_service.dart';
+import 'package:event_manager/ui/widgets/addtask_btn.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -9,8 +16,6 @@ import 'package:event_manager/services/notification_services.dart';
 import 'package:event_manager/services/theme_services.dart';
 import 'package:event_manager/ui/add_task_bar.dart';
 import 'package:event_manager/ui/theme.dart';
-import 'package:event_manager/ui/widgets/button.dart';
-import 'package:event_manager/ui/widgets/popup_menu.dart';
 import 'package:event_manager/ui/widgets/task_tile.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +35,8 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   bool _isSearchVisible = false;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -41,99 +48,26 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        key: _scaffoldKey,
         appBar: _appBar(),
+        drawer: _buildDrawer(context), // Add the Drawer here
         body: Column(
           children: [
-
             _addTaskBar(),
 
             _addDateBar(),
 
-            const SizedBox( height: 10, ),
+            const SizedBox(
+              height: 10,
+            ),
 
             // _isSearchVisible ? _searchBar() : Container(),
 
             _showTasks(),
           ],
         ));
-
   }
 
-
-
-  // Customized appbar
-  // _appBar() {
-  //   return AppBar(
-  //     automaticallyImplyLeading: false,
-  //     elevation: 0,
-  //     backgroundColor: context.theme.primaryColor,
-  //     leading: GestureDetector(
-  //       onTap: () {
-  //         ThemeService().switchTheme();
-  //       },
-  //       child: Icon(
-  //           Get.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
-  //           size: 20,
-  //           color: Get.isDarkMode ? Colors.white : Colors.black),
-  //     ),
-  //     actions: [
-  //       CircleAvatar(
-  //         backgroundImage: AssetImage("images/profile_img.jpg"),
-  //         radius: 20,
-  //       ).popupMenu(context: context),
-  //       const SizedBox(width: 20),
-  //     ],
-  //   );
-  //
-  // }
-
-  // _appBar() {
-  //   return AppBar(
-  //     automaticallyImplyLeading: false,
-  //     elevation: 0,
-  //     backgroundColor: context.theme.primaryColor,
-  //     leading: Padding(
-  //       padding: const EdgeInsets.only(left: 16),
-  //   child: CircleAvatar(
-  //       radius: 20,
-  //       backgroundColor: Colors.transparent,
-  //       child: ClipOval(
-  //         child: Image.asset(
-  //           "images/profile_img.jpg",
-  //           width: 36,
-  //           height: 36,
-  //           fit: BoxFit.cover,
-  //         ),
-  //       ),
-  //     )
-  //
-  //   )
-  //
-  //       .popupMenu(context: context),
-  //     actions: [
-  //       GestureDetector(
-  //         onTap: () {
-  //           setState(() {
-  //             _isSearchVisible = !_isSearchVisible; // Toggle search bar
-  //           });
-  //         },
-  //         child: const Icon(Icons.search, size: 24, color: Colors.white),
-  //       ),
-  //       const SizedBox(width: 20),
-  //       GestureDetector(
-  //         onTap: () {
-  //           ThemeService().switchTheme();
-  //         },
-  //         child: Icon(
-  //           Get.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
-  //           size: 20,
-  //           color: Get.isDarkMode ? Colors.white : Colors.black,
-  //         ),
-  //       ),
-  //       const SizedBox(width: 20),
-  //     ],
-  //   );
-  // }
 
   _appBar() {
     return AppBar(
@@ -142,45 +76,59 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: context.theme.primaryColor,
       title: _isSearchVisible
           ? Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2), // Slight transparency
-          borderRadius: BorderRadius.circular(12), // Rounded corners
-          border: Border.all(color: Colors.white, width: 1.5), // White border
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value.toLowerCase();
-            });
-          },
-          decoration: InputDecoration(
-            hintText: "Search events...",
-            hintStyle: subTitleStyle.copyWith(color: Colors.white70),
-            border: InputBorder.none,
-            prefixIcon: const Icon(Icons.search, color: Colors.white),
-            contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          ),
-          style: const TextStyle(color: Colors.white),
-          autofocus: true,
-        ),
-      )
-          : null, // Removed title text
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 16),
-        child: CircleAvatar(
-          radius: 20,
-          backgroundColor: Colors.transparent,
-          child: ClipOval(
-            child: Image.asset(
-              "images/profile_img.jpg",
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-      ).popupMenu(context: context),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2), // Slight transparency
+                borderRadius: BorderRadius.circular(12), // Rounded corners
+                border:
+                    Border.all(color: Colors.white, width: 1.5), // White border
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: "Search events...",
+                  hintStyle: subTitleStyle.copyWith(color: Colors.white70),
+                  border: InputBorder.none,
+                  prefixIcon: const Icon(Icons.search, color: Colors.white),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                style: const TextStyle(color: Colors.white),
+                autofocus: true,
+              ),
+            )
+          : null,
+
+      // leading: Padding(
+      //   padding: const EdgeInsets.only(left: 16),
+      //   child:
+      //   // CircleAvatar(
+      //   //   radius: 20,
+      //   //   backgroundColor: Colors.transparent,
+      //   //   child: ClipOval(
+      //   //     child: Image.asset(
+      //   //       "images/profile_img.jpg",
+      //   //       width: 36,
+      //   //       height: 36,
+      //   //       fit: BoxFit.cover,
+      //   //     ),
+      //   //   ),
+      //   // ),
+      //   Icon(Icons.menu, color: Colors.white,)
+      //
+      // ).popupMenu(context: context),
+
+      leading: IconButton(
+        icon: const Icon(Icons.menu, color: Colors.white),
+        onPressed: () {
+          _scaffoldKey.currentState!
+              .openDrawer(); // ✅ Use GlobalKey to open Drawer
+        },
+      ),
+
       actions: [
         if (!_isSearchVisible)
           GestureDetector(
@@ -239,7 +187,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          MyButton(
+          Addtask_btn(
               label: "+ Add Task",
               onTap: () async {
                 await Get.to(() => AddTaskPage());
@@ -251,163 +199,108 @@ class _HomePageState extends State<HomePage> {
   }
 
   _addDateBar() {
-    return
-      Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.blueAccent, width: 2),
-          borderRadius: BorderRadius.circular(8),
+    return DatePicker(
+      DateTime.now(),
+      height: 100,
+      width: 80,
+      initialSelectedDate: DateTime.now(),
+      // selectionColor: Colors.blueAccent,
+      selectionColor: primaryClr,
+      selectedTextColor: Colors.white,
+      dateTextStyle: GoogleFonts.lato(
+        textStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
         ),
-      child:
-      DatePicker(
-        DateTime.now(),
-        height: 100,
-        width: 80,
-        initialSelectedDate: DateTime.now(),
-        // selectionColor: primaryClr,
-        selectionColor: Colors.blueAccent,
-        selectedTextColor: Colors.white,
-        dateTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black)),
-        dayTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
-        monthTextStyle: GoogleFonts.lato(
-            textStyle: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
-        onDateChange: (date) {
-          setState(() {
-            _selectedDate = date;
-            print("Selected date: $_selectedDate");
-          });
-        },
       ),
+      dayTextStyle: GoogleFonts.lato(
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
+      ),
+      monthTextStyle: GoogleFonts.lato(
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
+      ),
+      onDateChange: (date) {
+        setState(() {
+          _selectedDate = date;
+          print("Selected date: $_selectedDate");
+        });
+      },
     );
   }
 
-
-
-
-
-
-// ------------------------------
-  // _searchBar() {
-  //   return Container(
-  //     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-  //     child: TextField(
-  //       controller: _searchController,
-  //       onChanged: (value) {
-  //         setState(() {
-  //           _searchQuery = value.toLowerCase();
-  //         });
-  //       },
-  //       decoration: InputDecoration(
-  //         hintText: "Search tasks by title, description, or category",
-  //         hintStyle: subTitleStyle,
-  //         prefixIcon: const Icon(Icons.search, color: Colors.grey),
-  //         filled: true,
-  //         fillColor: Get.isDarkMode ? darkGreyClr : Colors.grey[100],
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //           borderSide: BorderSide.none,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // _searchBar() {
-  //   return Container(
-  //     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-  //     child: TextField(
-  //       controller: _searchController,
-  //       onChanged: (value) {
-  //         setState(() {
-  //           _searchQuery = value.toLowerCase();
-  //         });
-  //       },
-  //       decoration: InputDecoration(
-  //         hintText: "Search tasks by title, description, or category",
-  //         hintStyle: subTitleStyle,
-  //         prefixIcon: const Icon(Icons.search, color: Colors.grey),
-  //         filled: true,
-  //         fillColor: Get.isDarkMode ? darkGreyClr : Colors.grey[100],
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //           borderSide: BorderSide.none,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   _showTasks() {
-  return Expanded(
+    return Expanded(
+      child: Obx(() {
+        final filteredTasks = _taskController.taskList.where((task) {
+          return task.title!.toLowerCase().contains(_searchQuery) ||
+              task.description!.toLowerCase().contains(_searchQuery) ||
+              task.category!.toLowerCase().contains(_searchQuery);
+        }).toList();
 
-    child: Obx(() {
+        final tasksToDisplay =
+            _searchQuery.isNotEmpty ? filteredTasks : _taskController.taskList;
 
-      final filteredTasks = _taskController.taskList.where((task) {
-        return task.title!.toLowerCase().contains(_searchQuery) ||
-            task.description!.toLowerCase().contains(_searchQuery) ||
-            task.category!.toLowerCase().contains(_searchQuery);
-      }).toList();
+        return ListView.builder(
+            itemCount: tasksToDisplay.length,
+            itemBuilder: (_, index) {
+              // print(_taskController.taskList.length);
 
-      final tasksToDisplay = _searchQuery.isNotEmpty ? filteredTasks : _taskController.taskList;
+              Task task = tasksToDisplay[index];
+              print(task.toJson());
 
-      return ListView.builder(
-          itemCount: tasksToDisplay.length,
-          itemBuilder: (_, index) {
-            // print(_taskController.taskList.length);
+              if (task.repeat == 'Daily' ||
+                  task.date == DateFormat.yMd().format(_selectedDate)) {
+                // CALENDER
 
-            Task task = tasksToDisplay[index];
-            print(task.toJson());
+                return AnimationConfiguration.staggeredList(
+                    position: index,
+                    child: SlideAnimation(
+                        child: FadeInAnimation(
+                            child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _showBottomSheet(context, task);
+                          },
+                          child: TaskTile(task),
+                        )
+                      ],
+                    ))));
+              }
+              ;
 
-            if(task.repeat=='Daily'  || task.date == DateFormat.yMd().format(_selectedDate)){
-
-              return AnimationConfiguration.staggeredList(
-                  position: index,
-                  child: SlideAnimation(
-                      child: FadeInAnimation(
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  _showBottomSheet(
-                                      context,task);
-                                },
-                                child: TaskTile(task),
-                              )
-                            ],
-                          ))));
-            };
-
-            if(task.date==DateFormat.yMd().format(_selectedDate)){
-              return AnimationConfiguration.staggeredList(
-                  position: index,
-                  child: SlideAnimation(
-                      child: FadeInAnimation(
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  _showBottomSheet(
-                                      context,task);
-                                },
-                                child: TaskTile(task),
-                              )
-                            ],
-                          ))));
-            }else{
-              return Container();
-            }
-
-
-          });
-    }),
-
-  );
-}
-
+              if (task.date == DateFormat.yMd().format(_selectedDate)) {
+                //  CALENDER
+                return AnimationConfiguration.staggeredList(
+                    position: index,
+                    child: SlideAnimation(
+                        child: FadeInAnimation(
+                            child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _showBottomSheet(context, task);
+                          },
+                          child: TaskTile(task),
+                        )
+                      ],
+                    ))));
+              } else {
+                return Container();
+              }
+            });
+      }),
+    );
+  }
 
   _showBottomSheet(BuildContext context, Task task) {
     Get.bottomSheet(
@@ -434,18 +327,18 @@ class _HomePageState extends State<HomePage> {
             task.isCompleted == 1
                 ? Container()
                 : _bottomSheetButton(
-              label: "Task Completed",
-              onTap: () {
-                _taskController.markTaskCompleted(task.id!);
-                Get.back();
-              },
-              clr: primaryClr,
-              context: context,
-            ),
+                    label: "Task Completed",
+                    onTap: () {
+                      _taskController.markTaskCompleted(task.id!);
+                      Get.back();
+                    },
+                    clr: primaryClr,
+                    context: context,
+                  ),
             // update button
             _bottomSheetButton(
               label: "Update Task",
-              onTap: (){
+              onTap: () {
                 Get.off(() => AddTaskPage(task: task));
               },
               clr: Colors.blue,
@@ -481,7 +374,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   _bottomSheetButton({
     required String label,
     required Function()? onTap,
@@ -496,22 +388,169 @@ class _HomePageState extends State<HomePage> {
         height: 55,
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
-          border:
-              Border.all(width: 2, color: isClose == true ?Get.isDarkMode? Colors.grey[600]!: Colors.grey[300]! : clr),
+          border: Border.all(
+              width: 2,
+              color: isClose == true
+                  ? Get.isDarkMode
+                      ? Colors.grey[600]!
+                      : Colors.grey[300]!
+                  : clr),
           borderRadius: BorderRadius.circular(20),
           color: isClose == true ? Colors.transparent : clr,
         ),
         child: Center(
-            child: Text(
-                label,
-                 style: isClose?titleStyle:titleStyle.copyWith(color: Colors.white),
-            ),
+          child: Text(
+            label,
+            style:
+                isClose ? titleStyle : titleStyle.copyWith(color: Colors.white),
+          ),
         ),
       ),
     );
   }
+
   void refreshTasks() {
     _taskController.getTasks();
     setState(() {});
   }
+}
+
+Widget _buildDrawer(BuildContext context) {
+  User? user = FirebaseAuth.instance.currentUser;
+  return Container(
+    width: MediaQuery.of(context).size.width * 0.75,
+    child: Drawer(
+      child: Column(
+        children: [
+          /// ✅ **Header**
+          Container(
+            width: double.infinity, // Full width header
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+            // padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.only(top: 35, left: 30, bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                 CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    user?.displayName != null && user!.displayName!.isNotEmpty
+                        ? user!.displayName![0].toUpperCase()  // ✅ Get first letter and make it uppercase
+                        : '?',  // Show '?' if no name is available
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                 Text(
+                   "Welcome, ${user?.displayName ?? 'User!'}",
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                 Text( user?.email ?? "user@example.com", style: TextStyle(color: Colors.white70)),
+              ],
+            ),
+          ),
+          SizedBox(height: 40,),
+          /// ✅ **Home**
+          ListTile(
+            leading: const Icon(Icons.home, color: Colors.blue),
+            title: const Text("Home"),
+            onTap: () => Navigator.pop(context),
+          ),
+
+
+
+
+          SizedBox(height: 20,),
+          /// ✅ **Download PDF**
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            title: const Text("Download PDF"),
+            onTap: () async {
+              try {
+                await PdfExportService.exportTask();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("PDF export successful!"))
+
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Error exporting PDF: $e")),
+                );
+              }
+              Navigator.pop(context);
+            },
+          ),
+
+          SizedBox(height: 20,),
+
+          /// ✅ **Backup Data**
+          ListTile(
+            leading: const Icon(Icons.backup, color: Colors.blueAccent),
+            title: const Text("Back-Up"),
+            onTap: () async {
+              await BackupRestore.backupToLocal();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Backup saved successfully!')),
+              );
+              Navigator.pop(context);
+            },
+          ),
+          SizedBox(height: 20,),
+          /// ✅ **Restore Data**
+          ListTile(
+            leading: const Icon(Icons.restore, color: Colors.purple),
+            title: const Text("Restore Data"),
+            onTap: () async {
+              await BackupRestore.restoreFromLocal();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Database restored successfully!')),
+              );
+              Navigator.pop(context);
+            },
+          ),
+          SizedBox(height: 20,),
+          /// ✅ **App Lock**
+          ListTile(
+            leading: const Icon(Icons.lock_open_rounded, color: Colors.purpleAccent),
+            title: const Text("App Lock"),
+            onTap: () {
+              AppLockService.isPinSet().then((isPinSet) {
+                if (isPinSet) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPinScreen()));
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SetPinScreen()));
+                }
+              });
+              Navigator.pop(context);
+            },
+          ),
+          SizedBox(height: 20,),
+          /// ✅ **Logout**
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Logout"),
+            onTap: () {
+              _showLogoutConfirmation();
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+/// ✅ **Logout Confirmation Dialog**
+void _showLogoutConfirmation() {
+  Get.defaultDialog(
+    title: "Logout",
+    middleText: "Are you sure you want to log out?",
+    textConfirm: "Yes",
+    textCancel: "No",
+    confirmTextColor: Colors.white,
+    onConfirm: () {
+      Get.off(() => LoginScreen());
+    },
+  );
 }
