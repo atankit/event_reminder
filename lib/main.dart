@@ -28,7 +28,7 @@ Future<void> main() async {
   bool isPinSet = await AppLockService.isPinSet();
   User? user = FirebaseAuth.instance.currentUser;
 
-  // Only allow portrait mode
+  // fixed only portrait mode
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

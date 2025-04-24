@@ -52,32 +52,32 @@ class AppLockService {
     return false; // Incorrect PIN
   }
 
-  // Biometric Authentication
-  static Future<bool> authenticateWithBiometrics() async {
-    try {
-      bool canAuthenticate = await _auth.canCheckBiometrics;
-      bool isDeviceSupported = await _auth.isDeviceSupported();
-
-      print("Can check biometrics: $canAuthenticate");
-      print("Is device supported: $isDeviceSupported");
-
-      if (!canAuthenticate && !isDeviceSupported) {
-        print("Biometric authentication is not available.");
-        return false;
-      }
-
-      bool isAuthenticated = await _auth.authenticate(
-        localizedReason: 'Use fingerprint or face unlock',
-        options: AuthenticationOptions(biometricOnly: true),
-      );
-
-      print("Authentication successful: $isAuthenticated");
-      return isAuthenticated;
-    } catch (e) {
-      print("Biometric authentication error: $e");
-      return false;
-    }
-  }
+  // // Biometric Authentication
+  // static Future<bool> authenticateWithBiometrics() async {
+  //   try {
+  //     bool canAuthenticate = await _auth.canCheckBiometrics;
+  //     bool isDeviceSupported = await _auth.isDeviceSupported();
+  //
+  //     print("Can check biometrics: $canAuthenticate");
+  //     print("Is device supported: $isDeviceSupported");
+  //
+  //     if (!canAuthenticate && !isDeviceSupported) {
+  //       print("Biometric authentication is not available.");
+  //       return false;
+  //     }
+  //
+  //     bool isAuthenticated = await _auth.authenticate(
+  //       localizedReason: 'Use fingerprint or face unlock',
+  //       options: AuthenticationOptions(biometricOnly: true),
+  //     );
+  //
+  //     print("Authentication successful: $isAuthenticated");
+  //     return isAuthenticated;
+  //   } catch (e) {
+  //     print("Biometric authentication error: $e");
+  //     return false;
+  //   }
+  // }
 
 
 }

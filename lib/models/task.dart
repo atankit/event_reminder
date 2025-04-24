@@ -1,3 +1,4 @@
+//     Sqflite-----------------
 // class Task {
 //   int? id;
 //   String? title;
@@ -73,85 +74,7 @@
 //
 // }
 
-// class Task {
-//   String? id;
-//   String? title;
-//   String? description;
-//   int? isCompleted;
-//   String? date;
-//   String? startTime;
-//   String? endTime;
-//   String? location;
-//   String? category;
-//   int? color;
-//   int? remind;
-//   String? repeat;
-//   String? photoPath;
-//   String? videoPath;
-//   String? filePath;
-//
-//   Task({
-//     this.id,
-//     this.title,
-//     this.description,
-//     this.isCompleted,
-//     this.date,
-//     this.startTime,
-//     this.endTime,
-//     this.location,
-//     this.category,
-//     this.color,
-//     this.remind,
-//     this.repeat,
-//     this.photoPath,
-//     this.videoPath,
-//     this.filePath,
-//   });
-//
-//   /// ✅ Convert Firestore doc to Task
-//   factory Task.fromJson(Map<String, dynamic> json, [String? docId]) {
-//     return Task(
-//       id: docId,
-//       title: json['title'],
-//       description: json['description'],
-//       isCompleted: json['isCompleted'],
-//       date: json['date'],
-//       startTime: json['startTime'],
-//       endTime: json['endTime'],
-//       location: json['location'],
-//       category: json['category'],
-//       color: json['color'],
-//       remind: json['remind'],
-//       repeat: json['repeat'],
-//       photoPath: json['photoPath'],
-//       videoPath: json['videoPath'],
-//       filePath: json['filePath'],
-//     );
-//   }
-//
-//   /// ✅ Convert Task to JSON (for Firestore)
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'title': title,
-//       'description': description,
-//       'isCompleted': isCompleted,
-//       'date': date,
-//       'startTime': startTime,
-//       'endTime': endTime,
-//       'location': location,
-//       'category': category,
-//       'color': color,
-//       'remind': remind,
-//       'repeat': repeat,
-//       'photoPath': photoPath,
-//       'videoPath': videoPath,
-//       'filePath': filePath,
-//     };
-//   }
-// }
-
-
- //   multiple paths
+//    Firebase-------------------
 class Task {
   String? id;
   String? title;
@@ -187,7 +110,7 @@ class Task {
     this.filePaths,
   });
 
-  /// ✅ Convert Firestore doc to Task
+  ///  Convert Firestore doc to Task
   factory Task.fromJson(Map<String, dynamic> json, [String? docId]) {
     return Task(
       id: docId,
@@ -208,7 +131,7 @@ class Task {
     );
   }
 
-  /// ✅ Convert Task to JSON (for Firestore)
+  ///  Convert Task to JSON (for Firestore)
   Map<String, dynamic> toJson() {
     return {
       'title': title,

@@ -15,17 +15,17 @@ class VideoPlayerWidget extends StatefulWidget {
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   late VideoPlayerController _controller;
-  bool _isMuted = true; // Track mute state
-  bool _isPlaying = false; // Track playback state
+  bool _isMuted = true;
+  bool _isPlaying = false;
 
   @override
   void initState() {
     super.initState();
     _controller = VideoPlayerController.file(File(widget.videoPath))
       ..initialize().then((_) {
-        setState(() {}); // Refresh after initialization
+        setState(() {});
       });
-    _controller.setVolume(0.0); // Start muted
+    _controller.setVolume(0.0);
   }
 
   @override

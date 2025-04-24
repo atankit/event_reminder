@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+//        Sqflite-------------------
 // class BackupRestore {
 //   static Future<void> backupToLocal() async {
 //     try {
@@ -46,7 +47,7 @@ import 'package:sqflite/sqflite.dart';
 //   }
 // }
 
-
+//    Firebase --------------------------
 class BackupRestore {
   static Future<void> backupToLocal() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -86,7 +87,6 @@ class BackupRestore {
     final jsonStr = await file.readAsString();
     final backupData = jsonDecode(jsonStr);
 
-    // Optional: Restore main user doc (if you have extra metadata)
     if (backupData['user'] != null) {
       await FirebaseFirestore.instance.collection('tasks').doc(uid).set(backupData['user']);
     }
@@ -98,7 +98,7 @@ class BackupRestore {
           .collection('userTasks');
 
       for (final task in backupData['tasks']) {
-        final docRef = userTasksCollection.doc(); // or use task['id'] if saved
+        final docRef = userTasksCollection.doc();
         await docRef.set(task);
       }
       Get.find<TaskFbController>().getTasks();
