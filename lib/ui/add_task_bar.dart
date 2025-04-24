@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:event_manager/controllers/task_controller.dart';
+import 'package:event_manager/controllers/taskfb_controller.dart';
 import 'package:event_manager/models/task.dart';
 import 'package:event_manager/ui/media_preview/image_screen.dart';
 import 'package:event_manager/ui/theme.dart';
@@ -24,7 +24,8 @@ class AddTaskPage extends StatefulWidget {
 }
 
 class _AddTaskPageState extends State<AddTaskPage> {
-  final TaskController _taskController = Get.put(TaskController()); //find
+  // final TaskController _taskController = Get.put(TaskController());
+  final TaskFbController _taskfbController = Get.put(TaskFbController());
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
@@ -43,9 +44,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
   String _selectedRepeat = "None";
   final List<String> repeatList = ["None", "Daily", "Weekly", "Monthly"];
 
-  File? _selectedImage;
-  File? _selectedVideo;
-  File? _selectedFile;
+  // File? _selectedImage;
+  // File? _selectedVideo;
+  // File? _selectedFile;
+  List<XFile> _selectedImages = [];
+  List<XFile> _selectedVideos = [];
+  List<XFile> _selectedFiles = [];
 
   int _selectedColor = 0;
 
@@ -59,6 +63,28 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  // void _loadTaskData(Task task) {
+  //   _titleController.text = task.title!;
+  //   _descController.text = task.description!;
+  //   _locationController.text = task.location!;
+  //   _selectedDate = DateFormat.yMd().parse(task.date!);
+  //   _startTime = task.startTime!;
+  //   _endTime = task.endTime!;
+  //   _selectedCategory = task.category!;
+  //   _selectedRemind = task.remind!;
+  //   _selectedRepeat = task.repeat!;
+  //   _selectedColor = task.color!;
+  //
+  //   if (task.photoPaths != "No Image Found!") {
+  //     _selectedImages = File(task.photoPaths!);
+  //   }
+  //   if (task.videoPaths != "No Video Found!") {
+  //     _selectedVideos = File(task.videoPaths!);
+  //   }
+  //   if (task.filePaths != "No File Found!") {
+  //     _selectedFiles = File(task.filePaths!);
+  //   }
+  // }
   void _loadTaskData(Task task) {
     _titleController.text = task.title!;
     _descController.text = task.description!;
@@ -71,15 +97,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
     _selectedRepeat = task.repeat!;
     _selectedColor = task.color!;
 
-    if (task.photoPath != "No Image Found!") {
-      _selectedImage = File(task.photoPath!);
-    }
-    if (task.videoPath != "No Video Found!") {
-      _selectedVideo = File(task.videoPath!);
-    }
-    if (task.filePath != "No File Found!") {
-      _selectedFile = File(task.filePath!);
-    }
+    _selectedImages = task.photoPaths?.map((path) => XFile(path)).toList() ?? [];
+    _selectedVideos = task.videoPaths?.map((path) => XFile(path)).toList() ?? [];
+    _selectedFiles = task.filePaths?.map((path) => XFile(path)).toList() ?? [];
   }
 
   @override
@@ -91,7 +111,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Text("Add Task", style: headingStyle),
               MyInputField(
                 title: "Title",
                 hint: "Enter your title",
@@ -102,14 +121,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 hint: "Enter your description",
                 controller: _descController,
               ),
-              // MyInputField(
-              //   title: "Date",
-              //   hint: DateFormat.yMd().format(_selectedDate),
-              //   widget: IconButton(
-              //     icon: const Icon(Icons.calendar_today_outlined, color: Colors.grey),
-              //     onPressed: _getDateFromUser,
-              //   ),
-              // ),
               MyInputField(
                 title: "Date",
                 hint: DateFormat('dd-MM-yyyy').format(_selectedDate),
@@ -206,7 +217,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         items: remindList.map((value) {
                           return DropdownMenuItem(
                             value: value,
-                            // child: Text(value.toString()),
                             child: Text("$value min"),
                           );
                         }).toList(),
@@ -280,37 +290,47 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _mediaButton(
-                      "Image", Icons.image, Colors.blueAccent, _pickImage),
+                      "Image", Icons.image, Colors.blueAccent, _pickImages),
                   _mediaButton(
-                      "Video", Icons.videocam, Colors.black, _pickVideo),
+                      "Video", Icons.videocam, Colors.black, _pickVideos),
                   _mediaButton(
-                      "File", Icons.attach_file, Colors.red, _pickFile),
+                      "File", Icons.attach_file, Colors.red, _pickFiles),
                 ],
               ),
               const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  if (_selectedImage != null)
-                    _mediaPreview("Image", _selectedImage!.path, (){
-                      setState(() {
-                        _selectedImage = null;
-                      });
-                    }),
-                  if (_selectedVideo != null)
-                    _mediaPreview("Video", _selectedVideo!.path, (){
-                      setState(() {
-                        _selectedVideo = null;
-                      });
-                    }),
-                  if (_selectedFile != null)
-                    _mediaPreview("File", _selectedFile!.path, (){
-                      setState(() {
-                        _selectedFile = null;
-                      });
-                    }),
-                ],
+              /// media preview --------------
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ..._selectedImages.map((img) => Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _mediaPreview("Image", img.path, () {
+                        setState(() {
+                          _selectedImages.remove(img);
+                        });
+                      }),
+                    )),
+                    ..._selectedVideos.map((vid) => Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _mediaPreview("Video", vid.path, () {
+                        setState(() {
+                          _selectedVideos.remove(vid);
+                        });
+                      }),
+                    )),
+                    ..._selectedFiles.map((file) => Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: _mediaPreview("File", file.path, () {
+                        setState(() {
+                          _selectedFiles.remove(file);
+                        });
+                      }),
+                    )),
+                  ],
+                ),
               ),
+
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,7 +414,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
             return GestureDetector(
               onTap: () {
                 if (index == 3) {
-                  _showColorPicker(); // Open color picker when selecting the last option
+                  _showColorPicker();
                 } else {
                   setState(() {
                     _selectedColor = index;
@@ -411,14 +431,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           ? pinkClr
                           : index == 2
                               ? yellowClr
-                              : _customColor, // User-selected color
+                              : _customColor,
 
                   child: _selectedColor == index
                       ? const Icon(Icons.done, color: Colors.white, size: 16)
                       : (index == 3
                           ? const Icon(Icons.color_lens,
                               color: Colors.white,
-                              size: 16) // Color picker icon
+                              size: 16)
                           : Container()),
                 ),
               ),
@@ -471,8 +491,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-// Declare a variable for the custom color
-  Color _customColor = Colors.blue; // Default custom color
+
+  Color _customColor = Colors.blue;
 
   Future<void> _validateData() async {
     if (_titleController.text.isNotEmpty && _descController.text.isNotEmpty) {
@@ -494,6 +514,49 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  // Future<void> _addTaskToDb() async {
+  //   Task task = Task(
+  //     title: _titleController.text,
+  //     description: _descController.text,
+  //     date: DateFormat.yMd().format(_selectedDate),
+  //     startTime: _startTime,
+  //     endTime: _endTime,
+  //     location: _locationController.text,
+  //     category: _selectedCategory,
+  //     remind: _selectedRemind,
+  //     repeat: _selectedRepeat,
+  //     color: _selectedColor,
+  //     photoPath: _selectedImage?.path ?? "No Image Found!",
+  //     videoPath: _selectedVideo?.path ?? "No Video Found!",
+  //     filePath: _selectedFile?.path ?? "No File Found!",
+  //     isCompleted: 0,
+  //   );
+  //   int value = await _taskController.addTask(task: task);
+  //   print("Task added with ID: $value");
+  // }
+
+  // Future<void> _addTaskToDb() async {
+  //   Task task = Task(
+  //     title: _titleController.text,
+  //     description: _descController.text,
+  //     date: DateFormat.yMd().format(_selectedDate),
+  //     startTime: _startTime,
+  //     endTime: _endTime,
+  //     location: _locationController.text,
+  //     category: _selectedCategory,
+  //     remind: _selectedRemind,
+  //     repeat: _selectedRepeat,
+  //     color: _selectedColor,
+  //     photoPath: _selectedImage?.path ?? "No Image Found!",
+  //     videoPath: _selectedVideo?.path ?? "No Video Found!",
+  //     filePath: _selectedFile?.path ?? "No File Found!",
+  //     isCompleted: 0,
+  //   );
+  //
+  //   await _taskfbController.addTask(task: task); // Firebase helper
+  //   print("Task added to Firebase!");
+  // }
+
   Future<void> _addTaskToDb() async {
     Task task = Task(
       title: _titleController.text,
@@ -506,18 +569,20 @@ class _AddTaskPageState extends State<AddTaskPage> {
       remind: _selectedRemind,
       repeat: _selectedRepeat,
       color: _selectedColor,
-      photoPath: _selectedImage?.path ?? "No Image Found!",
-      videoPath: _selectedVideo?.path ?? "No Video Found!",
-      filePath: _selectedFile?.path ?? "No File Found!",
       isCompleted: 0,
+      photoPaths: _selectedImages.map((e) => e.path).toList(),
+      videoPaths: _selectedVideos.map((e) => e.path).toList(),
+      filePaths: _selectedFiles.map((e) => e.path).toList(),
     );
-    int value = await _taskController.addTask(task: task);
-    print("Task added with ID: $value");
+
+    await _taskfbController.addTask(task: task); // Your Firebase helper
+    print("Task with multiple paths added to Firebase!");
   }
+
 
   Future<void> _updateTaskInDb() async {
     Task updatedTask = Task(
-      id: widget.task!.id, // Use the existing task ID
+      id: widget.task!.id,
       title: _titleController.text,
       description: _descController.text,
       date: DateFormat.yMd().format(_selectedDate),
@@ -528,12 +593,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
       remind: _selectedRemind,
       repeat: _selectedRepeat,
       color: _selectedColor,
-      photoPath: _selectedImage?.path ?? "No Image Found!",
-      videoPath: _selectedVideo?.path ?? "No Video Found!",
-      filePath: _selectedFile?.path ?? "No File Found!",
+      photoPaths: _selectedImages.map((e) => e.path).toList(),
+      videoPaths: _selectedVideos.map((e) => e.path).toList(),
+      filePaths: _selectedFiles.map((e) => e.path).toList(),
       isCompleted: widget.task!.isCompleted,
     );
-    await _taskController.updateEvents(updatedTask);
+    await _taskfbController.updateEvents(updatedTask);
     print("Task updated: ${updatedTask.title}");
     print('Updating Task with ID: ${widget.task!.id}');
   }
@@ -569,8 +634,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            FullImageScreen(imagePath: path),
+                        builder: (context) => FullImageScreen(imagePath: path),
                       ),
                     );
                   },
@@ -613,7 +677,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => VideoPlayerScreen(videoPath: path),
+                        builder: (context) =>
+                            VideoPlayerScreen(videoPath: path),
                       ),
                     );
                   },
@@ -654,7 +719,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
               ],
             )
-
           else if (type == "PDF" && path.isNotEmpty)
             GestureDetector(
               onTap: () {
@@ -695,108 +759,102 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
               ),
             )
-            else
-              Stack(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      OpenFilex.open(path); // Open the PDF file
-                    },
+          else
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    OpenFilex.open(path);
+                  },
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Get.isDarkMode ? Colors.black : Colors.white,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.picture_as_pdf,
+                          color: Get.isDarkMode ? Colors.white : Colors.black,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          path.split('/').last,
+                          style: subTitleStyle2.copyWith(fontSize: 10),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: onDelete,
                     child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Get.isDarkMode ? Colors.black : Colors.white,
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
                       ),
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.picture_as_pdf,
-                            color: Get.isDarkMode ? Colors.white : Colors.black,
-                            size: 24,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            path.split('/').last,
-                            style: subTitleStyle2.copyWith(fontSize: 10),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: onDelete,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-
-
+                ),
+              ],
+            )
         ],
       ),
     );
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedImage =
-        await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
+// multiple media selected -----------------
+  Future<void> _pickImages() async {
+    final List<XFile>? pickedImages = await _picker.pickMultiImage();
+    if (pickedImages != null) {
       setState(() {
-        _selectedImage = File(pickedImage.path);
+        _selectedImages.addAll(pickedImages);
       });
     }
   }
 
-  Future<void> _pickVideo() async {
-    final XFile? pickedVideo =
-        await _picker.pickVideo(source: ImageSource.gallery);
-    if (pickedVideo != null) {
-      setState(() {
-        _selectedVideo = File(pickedVideo.path);
-      });
-    }
-  }
-
-  // Future<void> _pickFile() async {
-  //   FilePickerResult? result = await FilePicker.platform.pickFiles();
-  //   if (result != null && result.files.single.path != null) {
-  //     setState(() {
-  //       _selectedFile = File(result.files.single.path!);
-  //     });
-  //   }
-  // }
-   // Add Restriction for only pdf file
-  Future<void> _pickFile() async {
+  Future<void> _pickVideos() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'], // Only allow PDF
+      type: FileType.video,
+      allowMultiple: true,
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null) {
       setState(() {
-        _selectedFile = File(result.files.single.path!);
+        _selectedVideos.addAll(result.paths.map((path) => XFile(path!)));
+      });
+    }
+  }
+
+
+  Future<void> _pickFiles() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedFiles.addAll(result.paths.map((path) => XFile(path!)));
       });
     }
   }

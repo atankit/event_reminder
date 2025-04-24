@@ -1,5 +1,7 @@
+import 'package:event_manager/SignIn/auth_service.dart';
 import 'package:event_manager/SignIn/login_screen.dart';
 import 'package:event_manager/cloud%20backup/backup_restore.dart';
+import 'package:event_manager/controllers/taskfb_controller.dart';
 import 'package:event_manager/pin/app_lock_service.dart';
 import 'package:event_manager/pin/reset_pin_screen.dart';
 import 'package:event_manager/pin/set_pin_screen.dart';
@@ -10,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:date_picker_timeline/date_picker_timeline.dart';
-import 'package:event_manager/controllers/task_controller.dart';
 import 'package:event_manager/models/task.dart';
 import 'package:event_manager/services/notification_services.dart';
 import 'package:event_manager/services/theme_services.dart';
@@ -18,6 +19,7 @@ import 'package:event_manager/ui/add_task_bar.dart';
 import 'package:event_manager/ui/theme.dart';
 import 'package:event_manager/ui/widgets/task_tile.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,7 +31,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DateTime _selectedDate = DateTime.now();
-  final _taskController = Get.put(TaskController());
+  final _taskfbController = Get.put(TaskFbController());
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -43,7 +45,9 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     refreshTasks();
     NotifyHelper();
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +72,6 @@ class _HomePageState extends State<HomePage> {
         ));
   }
 
-
   _appBar() {
     return AppBar(
       automaticallyImplyLeading: false,
@@ -77,10 +80,10 @@ class _HomePageState extends State<HomePage> {
       title: _isSearchVisible
           ? Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2), // Slight transparency
-                borderRadius: BorderRadius.circular(12), // Rounded corners
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
                 border:
-                    Border.all(color: Colors.white, width: 1.5), // White border
+                    Border.all(color: Colors.white, width: 1.5),
               ),
               child: TextField(
                 controller: _searchController,
@@ -102,30 +105,11 @@ class _HomePageState extends State<HomePage> {
             )
           : null,
 
-      // leading: Padding(
-      //   padding: const EdgeInsets.only(left: 16),
-      //   child:
-      //   // CircleAvatar(
-      //   //   radius: 20,
-      //   //   backgroundColor: Colors.transparent,
-      //   //   child: ClipOval(
-      //   //     child: Image.asset(
-      //   //       "images/profile_img.jpg",
-      //   //       width: 36,
-      //   //       height: 36,
-      //   //       fit: BoxFit.cover,
-      //   //     ),
-      //   //   ),
-      //   // ),
-      //   Icon(Icons.menu, color: Colors.white,)
-      //
-      // ).popupMenu(context: context),
-
       leading: IconButton(
         icon: const Icon(Icons.menu, color: Colors.white),
         onPressed: () {
           _scaffoldKey.currentState!
-              .openDrawer(); // ✅ Use GlobalKey to open Drawer
+              .openDrawer(); //  Use GlobalKey to open Drawer
         },
       ),
 
@@ -191,7 +175,7 @@ class _HomePageState extends State<HomePage> {
               label: "+ Add Task",
               onTap: () async {
                 await Get.to(() => AddTaskPage());
-                _taskController.getTasks();
+                _taskfbController.getTasks();
               })
         ],
       ),
@@ -204,7 +188,6 @@ class _HomePageState extends State<HomePage> {
       height: 100,
       width: 80,
       initialSelectedDate: DateTime.now(),
-      // selectionColor: Colors.blueAccent,
       selectionColor: primaryClr,
       selectedTextColor: Colors.white,
       dateTextStyle: GoogleFonts.lato(
@@ -240,14 +223,14 @@ class _HomePageState extends State<HomePage> {
   _showTasks() {
     return Expanded(
       child: Obx(() {
-        final filteredTasks = _taskController.taskList.where((task) {
+        final filteredTasks = _taskfbController.taskList.where((task) {
           return task.title!.toLowerCase().contains(_searchQuery) ||
               task.description!.toLowerCase().contains(_searchQuery) ||
               task.category!.toLowerCase().contains(_searchQuery);
         }).toList();
 
         final tasksToDisplay =
-            _searchQuery.isNotEmpty ? filteredTasks : _taskController.taskList;
+            _searchQuery.isNotEmpty ? filteredTasks : _taskfbController.taskList;
 
         return ListView.builder(
             itemCount: tasksToDisplay.length,
@@ -257,29 +240,28 @@ class _HomePageState extends State<HomePage> {
               Task task = tasksToDisplay[index];
               print(task.toJson());
 
-              if (task.repeat == 'Daily' ||
-                  task.date == DateFormat.yMd().format(_selectedDate)) {
-                // CALENDER
-
-                return AnimationConfiguration.staggeredList(
-                    position: index,
-                    child: SlideAnimation(
-                        child: FadeInAnimation(
-                            child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            _showBottomSheet(context, task);
-                          },
-                          child: TaskTile(task),
-                        )
-                      ],
-                    ))));
-              }
-              ;
+              // if (task.repeat == 'Daily' ||
+              //     task.date == DateFormat.yMd().format(_selectedDate)) {
+              //   // date picker
+              //
+              //   return AnimationConfiguration.staggeredList(
+              //       position: index,
+              //       child: SlideAnimation(
+              //           child: FadeInAnimation(
+              //               child: Row(
+              //         children: [
+              //           GestureDetector(
+              //             onTap: () {
+              //               _showBottomSheet(context, task);
+              //             },
+              //             child: TaskTile(task),
+              //           )
+              //         ],
+              //       ))));
+              // };
 
               if (task.date == DateFormat.yMd().format(_selectedDate)) {
-                //  CALENDER
+                //
                 return AnimationConfiguration.staggeredList(
                     position: index,
                     child: SlideAnimation(
@@ -329,7 +311,7 @@ class _HomePageState extends State<HomePage> {
                 : _bottomSheetButton(
                     label: "Task Completed",
                     onTap: () {
-                      _taskController.markTaskCompleted(task.id!);
+                      // _taskController.markTaskCompleted(task.id!);
                       Get.back();
                     },
                     clr: primaryClr,
@@ -348,7 +330,7 @@ class _HomePageState extends State<HomePage> {
             _bottomSheetButton(
               label: "Delete Task",
               onTap: () {
-                _taskController.delete(task);
+                _taskfbController.delete(task);
                 Get.back();
               },
               clr: Colors.red[300]!,
@@ -410,59 +392,98 @@ class _HomePageState extends State<HomePage> {
   }
 
   void refreshTasks() {
-    _taskController.getTasks();
+    _taskfbController.getTasks();
     setState(() {});
   }
 }
 
+  //    -- ---  Nav Drawer    ---  --
 Widget _buildDrawer(BuildContext context) {
   User? user = FirebaseAuth.instance.currentUser;
+  print("Display Name: ${user?.displayName}");
   return Container(
     width: MediaQuery.of(context).size.width * 0.75,
     child: Drawer(
       child: Column(
         children: [
-          /// ✅ **Header**
+          ///  Header ---------------
           Container(
-            width: double.infinity, // Full width header
+            width: double.infinity,
             decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-            // padding: const EdgeInsets.all(30),
             padding: const EdgeInsets.only(top: 35, left: 30, bottom: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 CircleAvatar(
+                CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.white,
-                  child: Text(
-                    user?.displayName != null && user!.displayName!.isNotEmpty
-                        ? user!.displayName![0].toUpperCase()  // ✅ Get first letter and make it uppercase
-                        : '?',  // Show '?' if no name is available
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black),
+                  child:
+                  Text(
+                    user != null && user.displayName != null
+                        ? user.displayName![0].toUpperCase()
+                        : (user != null && user.isAnonymous ? 'G' : 'U'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
+        ///  If Anonymous user ------------------
                 const SizedBox(height: 10),
-                 Text(
-                   "Welcome, ${user?.displayName ?? 'User!'}",
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                 Text( user?.email ?? "user@example.com", style: TextStyle(color: Colors.white70)),
+                if (user != null && user.isAnonymous)
+                  GestureDetector(
+                    onTap: () async {
+                      await  linkAnonymousWithGoogle(context);
+                      await FirebaseAuth.instance.currentUser?.reload();
+                      User? updatedUser = FirebaseAuth.instance.currentUser;
+                      print("Updated Display Name: ${updatedUser?.displayName}");
+                      Get.back();
+                    },
+
+                    child: const Text(
+                      'Sign in with Google',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+              /// ----------------------
+                  else if (user != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.displayName ?? 'Welcome back',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        user.email ?? '',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
+
           SizedBox(height: 40,),
-          /// ✅ **Home**
+          ///  Home -----------------
           ListTile(
             leading: const Icon(Icons.home, color: Colors.blue),
             title: const Text("Home"),
             onTap: () => Navigator.pop(context),
           ),
 
-
-
-
           SizedBox(height: 20,),
-          /// ✅ **Download PDF**
+          ///  Download PDF  ----------------
           ListTile(
             leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
             title: const Text("Download PDF"),
@@ -484,33 +505,75 @@ Widget _buildDrawer(BuildContext context) {
 
           SizedBox(height: 20,),
 
-          /// ✅ **Backup Data**
+          ///  Backup Data ----------------
+          // ListTile(
+          //   leading: const Icon(Icons.backup, color: Colors.blueAccent),
+          //   title: const Text("Back-Up"),
+          //   onTap: () async {
+          //     await BackupRestore.backupToLocal();
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text('Backup saved successfully!')),
+          //     );
+          //     Navigator.pop(context);
+          //   },
+          // ),
           ListTile(
             leading: const Icon(Icons.backup, color: Colors.blueAccent),
             title: const Text("Back-Up"),
             onTap: () async {
-              await BackupRestore.backupToLocal();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Backup saved successfully!')),
-              );
-              Navigator.pop(context);
+              final user = FirebaseAuth.instance.currentUser;
+
+              if (user != null) {
+                await BackupRestore.backupToLocal();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Backup saved successfully!')),
+                );
+                Get.back();
+              } else {
+                Get.back();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please sign in first!')),
+                );
+              }
             },
           ),
           SizedBox(height: 20,),
-          /// ✅ **Restore Data**
+
+          /// Restore Data--------------
+          // ListTile(
+          //   leading: const Icon(Icons.restore, color: Colors.purple),
+          //   title: const Text("Restore Data"),
+          //   onTap: () async {
+          //     await BackupRestore.restoreFromLocal();
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text('Database restored successfully!')),
+          //     );
+          //     Navigator.pop(context);
+          //   },
+          // ),
+
           ListTile(
             leading: const Icon(Icons.restore, color: Colors.purple),
             title: const Text("Restore Data"),
             onTap: () async {
-              await BackupRestore.restoreFromLocal();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Database restored successfully!')),
-              );
-              Navigator.pop(context);
+              var currentUser = FirebaseAuth.instance.currentUser;
+
+              if (currentUser != null) {
+                await BackupRestore.restoreFromLocal();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Database restored successfully!')),
+                );
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please sign in first')),
+                );
+              }
             },
           ),
+
           SizedBox(height: 20,),
-          /// ✅ **App Lock**
+          ///  App Lock ------------
           ListTile(
             leading: const Icon(Icons.lock_open_rounded, color: Colors.purpleAccent),
             title: const Text("App Lock"),
@@ -526,7 +589,8 @@ Widget _buildDrawer(BuildContext context) {
             },
           ),
           SizedBox(height: 20,),
-          /// ✅ **Logout**
+
+          ///  Logout-----------------
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text("Logout"),
@@ -541,7 +605,82 @@ Widget _buildDrawer(BuildContext context) {
 }
 
 
-/// ✅ **Logout Confirmation Dialog**
+Future<void> linkAnonymousWithGoogle(BuildContext context) async {
+  try {
+    await GoogleSignIn().signOut();
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return;
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null && currentUser.isAnonymous) {
+      try {
+        // Try to link
+        UserCredential result = await currentUser.linkWithCredential(credential);
+        final email = result.user?.email ?? 'User';
+
+        print("Anonymous account linked to Google. UID: ${result.user?.uid}");
+        print("Signed in display name: $email");
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Signed in successfully as $email",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use') {
+          print("Google account already in use. Cannot link anonymous user.");
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "This Google account is already linked to another user. Please use a different account.",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        } else {
+          rethrow;
+        }
+      }
+    } else {
+      print("User is not anonymous.");
+      final displayName = currentUser?.displayName ?? 'User';
+      print("Signed in display name: $displayName");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Already signed in as $displayName",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } catch (e) {
+    print("Error during anonymous to Google upgrade: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Sign-in failed: $e")),
+    );
+  }
+}
+
+
+
+// Logout Confirmation Dialog -------------
 void _showLogoutConfirmation() {
   Get.defaultDialog(
     title: "Logout",
@@ -550,7 +689,9 @@ void _showLogoutConfirmation() {
     textCancel: "No",
     confirmTextColor: Colors.white,
     onConfirm: () {
+      AuthService().logout();
       Get.off(() => LoginScreen());
     },
   );
 }
+

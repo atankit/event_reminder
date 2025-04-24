@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:event_manager/controllers/task_controller.dart';
+import 'package:event_manager/controllers/taskfb_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
@@ -11,7 +11,7 @@ class NotifyHelper {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
   FlutterLocalNotificationsPlugin();
   static final Set<String> _notifiedTasks = {}; // Using Set to prevent duplicates
-  final TaskController _taskController = Get.find<TaskController>();
+  final TaskFbController _taskController = Get.find<TaskFbController>();
 
   NotifyHelper() {
     _startMonitoringTasks();
@@ -186,7 +186,7 @@ class NotifyHelper {
       } else if (repeat == "Monthly") {
         scheduledDateTime = DateTime(
             now.year,
-            now.month == 12 ? 1 : now.month + 1, // Handle December case
+            now.month == 12 ? 1 : now.month + 1,
             now.day,
             pickedTime.hour,
             pickedTime.minute);

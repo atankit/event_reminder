@@ -2,14 +2,12 @@
 import 'dart:io';
 import 'package:event_manager/models/task.dart';
 import 'package:event_manager/ui/media_preview/image_screen.dart';
-import 'package:event_manager/ui/media_preview/pdf_screen.dart';
 import 'package:event_manager/ui/media_preview/vdo_player_screen.dart';
 import 'package:event_manager/ui/theme.dart';
 import 'package:event_manager/ui/vdo_player_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:share_plus/share_plus.dart';
 
 class TaskTile extends StatefulWidget {
   final Task? task;
@@ -130,81 +128,58 @@ class _TaskTileState extends State<TaskTile> {
               _buildDetailRow(Icons.location_on, "Location", widget.task?.location ?? "No Location"),
 
               SizedBox(height: 10),
-              // if ((widget.task?.photoPath != null ) ||
-              //     (widget.task?.videoPath != null ) ||
-              //     (widget.task?.filePath != null )) ...[
-              //   Text(
-              //     "Attached Media:",
-              //     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-              //   ),
-              //   SizedBox(height: 5),
-              //   Row(
-              //     children: [
-              //       if (widget.task?.photoPath != null &&
-              //           widget.task!.photoPath != "No Image Found!")
-              //         // Icon(Icons.image, color: Colors.white),
-              //
-              //       if (widget.task?.videoPath != null &&
-              //           widget.task!.videoPath != "No Video Found!")
-              //         Icon(Icons.videocam, color: Colors.white),
-              //       if (widget.task?.filePath != null &&
-              //           widget.task!.filePath != "No File Found!")
-              //         Icon(Icons.insert_drive_file, color: Colors.white),
-              //     ],
-              //   ),
-              // ],
 
-              if ((widget.task?.photoPath != null && widget.task!.photoPath != "No Image Found!") ||
-                  (widget.task?.videoPath != null && widget.task!.videoPath != "No Video Found!") ||
-                  (widget.task?.filePath != null && widget.task!.filePath != "No File Found!")) ...[
+              if ((widget.task?.photoPaths?.isNotEmpty ?? false) ||
+                  (widget.task?.videoPaths?.isNotEmpty ?? false) ||
+                  (widget.task?.filePaths?.isNotEmpty ?? false)) ...[
                 Text(
                   "Attached Media:",
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 SizedBox(height: 8),
-                Row(
+
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
-                    if (widget.task?.photoPath != null &&
-                        widget.task!.photoPath != "No Image Found!")
-                      GestureDetector(
+                    // Photos
+                    if (widget.task?.photoPaths != null)
+                      ...widget.task!.photoPaths!.map((path) => GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => FullImageScreen(imagePath: widget.task!.photoPath!),
+                              builder: (_) => FullImageScreen(imagePath: path),
                             ),
                           );
                         },
                         child: Container(
                           width: 50,
                           height: 50,
-                          margin: EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
-                              image: FileImage(File(widget.task!.photoPath!)),
+                              image: FileImage(File(path)),
                               fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ),
+                      )),
 
-
-                    if (widget.task?.videoPath != null &&
-                        widget.task!.videoPath != "No Video Found!")
-                      GestureDetector(
+                    // Videos
+                    if (widget.task?.videoPaths != null)
+                      ...widget.task!.videoPaths!.map((path) => GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => VideoPlayerScreen(videoPath: widget.task!.videoPath!),
+                              builder: (_) => VideoPlayerScreen(videoPath: path),
                             ),
                           );
                         },
                         child: Container(
                           width: 50,
                           height: 50,
-                          margin: EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Colors.black45,
@@ -213,20 +188,17 @@ class _TaskTileState extends State<TaskTile> {
                             child: Icon(Icons.play_circle_fill, color: Colors.white),
                           ),
                         ),
-                      ),
+                      )),
 
-
-
-                    if (widget.task?.filePath != null &&
-                        widget.task!.filePath != "No File Found!")
-                      GestureDetector(
+                    // Files
+                    if (widget.task?.filePaths != null)
+                      ...widget.task!.filePaths!.map((path) => GestureDetector(
                         onTap: () {
-                          OpenFilex.open(widget.task!.filePath!);
+                          OpenFilex.open(path);
                         },
                         child: Container(
                           width: 50,
                           height: 50,
-                          margin: EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: Colors.white24,
@@ -235,8 +207,7 @@ class _TaskTileState extends State<TaskTile> {
                             child: Icon(Icons.insert_drive_file, color: Colors.white),
                           ),
                         ),
-                      ),
-
+                      )),
                   ],
                 ),
               ],
