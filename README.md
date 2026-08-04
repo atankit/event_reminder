@@ -48,3 +48,7 @@ The Event Reminder App helps users efficiently manage personal and professional 
 
 ### Screensort - 
 https://github.com/user-attachments/assets/14726d6c-ec76-4830-a12b-3f8f5ad2a011
+<img width="1080" height="2400" alt="Image" src="https://github.com/user-attachments/assets/fdafb3eb-2a5f-42cc-8d1a-1b993ee6b2f8" />
+<img width="1080" height="2400" alt="Image" src="https://github.com/user-attachments/assets/5bfe5f18-0b38-4adf-9941-795ceed3afb8" />
+<img width="1080" height="2400" alt="Image" src="https://github.com/user-attachments/assets/e747e57a-abec-4984-8278-ba289c52968e" />
+<img width="1080" height="2400" alt="Image" src="https://github.com/user-attachments/assets/8b40c6cf-4ec3-4a59-b7c8-a2db77f57dab" />
